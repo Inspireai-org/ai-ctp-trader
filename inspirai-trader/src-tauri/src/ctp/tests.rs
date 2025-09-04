@@ -2,6 +2,8 @@
 mod market_data_subscription_test;
 // 交易功能测试
 mod trading_functionality_test;
+// 查询功能测试
+mod query_functionality_test;
 
 #[cfg(test)]
 mod tests {

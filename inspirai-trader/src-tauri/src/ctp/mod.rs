@@ -20,6 +20,7 @@ pub mod trading_service;
 pub mod account_service;
 pub mod position_manager;
 pub mod settlement_manager;
+pub mod query_service;
 
 #[cfg(test)]
 mod tests;
@@ -47,6 +48,7 @@ pub use trading_service::{TradingService, TradingStats};
 pub use account_service::{AccountService, FundStats, RiskMetrics, RiskStatus, AccountSummary};
 pub use position_manager::{PositionManager, PositionDetail, PositionStats};
 pub use settlement_manager::{SettlementManager, Settlement, SettlementSummary, SettlementReport};
+pub use query_service::{QueryService, QueryType, QueryState, QueryCache, QueryOptions};
 
 /// CTP 组件版本信息
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

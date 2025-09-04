@@ -26,6 +26,18 @@ pub enum CtpEvent {
     AccountUpdate(AccountInfo),
     /// 持仓信息更新
     PositionUpdate(Vec<Position>),
+    /// 查询结果 - 账户信息
+    QueryAccountResult(AccountInfo),
+    /// 查询结果 - 持仓信息
+    QueryPositionsResult(Vec<Position>),
+    /// 查询结果 - 成交记录
+    QueryTradesResult(Vec<TradeRecord>),
+    /// 查询结果 - 报单记录
+    QueryOrdersResult(Vec<OrderStatus>),
+    /// 查询结果 - 结算信息
+    QuerySettlementResult(String),
+    /// 结算信息确认成功
+    SettlementConfirmed,
     /// 错误事件
     Error(String),
 }
@@ -97,6 +109,24 @@ pub trait EventListener: Send + Sync {
     /// 处理持仓更新事件
     fn on_position_update(&self, _positions: &[Position]) {}
     
+    /// 处理查询结果 - 账户信息
+    fn on_query_account_result(&self, _account: &AccountInfo) {}
+    
+    /// 处理查询结果 - 持仓信息
+    fn on_query_positions_result(&self, _positions: &[Position]) {}
+    
+    /// 处理查询结果 - 成交记录
+    fn on_query_trades_result(&self, _trades: &[TradeRecord]) {}
+    
+    /// 处理查询结果 - 报单记录
+    fn on_query_orders_result(&self, _orders: &[OrderStatus]) {}
+    
+    /// 处理查询结果 - 结算信息
+    fn on_query_settlement_result(&self, _content: &str) {}
+    
+    /// 处理结算信息确认成功
+    fn on_settlement_confirmed(&self) {}
+    
     /// 处理错误事件
     fn on_error(&self, _error: &CtpError) {}
     
@@ -126,6 +156,30 @@ impl EventListener for DefaultEventListener {
     
     fn on_position_update(&self, positions: &[Position]) {
         tracing::info!("持仓更新: {} 个合约", positions.len());
+    }
+    
+    fn on_query_account_result(&self, account: &AccountInfo) {
+        tracing::info!("账户查询结果: 余额={:.2}, 可用={:.2}", account.balance, account.available);
+    }
+    
+    fn on_query_positions_result(&self, positions: &[Position]) {
+        tracing::info!("持仓查询结果: {} 个合约", positions.len());
+    }
+    
+    fn on_query_trades_result(&self, trades: &[TradeRecord]) {
+        tracing::info!("成交查询结果: {} 条记录", trades.len());
+    }
+    
+    fn on_query_orders_result(&self, orders: &[OrderStatus]) {
+        tracing::info!("报单查询结果: {} 条记录", orders.len());
+    }
+    
+    fn on_query_settlement_result(&self, content: &str) {
+        tracing::info!("结算信息查询结果: {} 字符", content.len());
+    }
+    
+    fn on_settlement_confirmed(&self) {
+        tracing::info!("结算信息确认成功");
     }
     
     fn on_error(&self, error: &CtpError) {

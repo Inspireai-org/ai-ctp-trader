@@ -1,0 +1,25 @@
+{
+  "enabled": true,
+  "name": "Bun Tauri 2 开发调试助手",
+  "description": "监控 bun 和 tauri 2 项目的配置文件、源代码变化，自动进行开发调试，结合当前 specs 里的任务完成情况来进行问题诊断和修复",
+  "version": "1",
+  "when": {
+    "type": "userTriggered",
+    "patterns": [
+      "inspirai-trader/package.json",
+      "inspirai-trader/.bunfig.toml",
+      "inspirai-trader/bun.lock",
+      "inspirai-trader/src-tauri/Cargo.toml",
+      "inspirai-trader/src-tauri/tauri.conf.json",
+      "inspirai-trader/src-tauri/src/**/*.rs",
+      "inspirai-trader/src/**/*.ts",
+      "inspirai-trader/src/**/*.tsx",
+      "inspirai-trader/vite.config.ts",
+      "inspirai-trader/tsconfig.json"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "检测到 bun + tauri 2 项目文件变化。请根据以下要求进行开发调试：\n\n1. **项目状态分析**：\n   - 检查 bun 依赖安装状态和配置\n   - 验证 tauri 2 配置的正确性\n   - 分析当前构建和运行状态\n\n2. **问题诊断**：\n   - 检查是否有编译错误或依赖冲突\n   - 验证 CTP 库集成是否正确\n   - 检查 Rust 后端和 React 前端的连接状态\n\n3. **调试修复**：\n   - 根据错误信息提供具体的修复方案\n   - 优化 bun 配置以提升开发体验\n   - 确保 tauri 2 的跨平台兼容性\n\n4. **开发建议**：\n   - 提供性能优化建议\n   - 推荐最佳实践和代码改进\n   - 确保符合项目规范要求\n\n请结合当前 specs 中的任务完成情况，提供详细的调试报告和解决方案。使用中文回复，重点关注实际可执行的修复步骤。"
+  }
+}

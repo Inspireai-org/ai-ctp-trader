@@ -521,7 +521,7 @@ impl CtpClient {
     }
 
     /// 查询账户信息
-    pub async fn query_account(&mut self) -> Result<AccountInfo, CtpError> {
+    pub async fn query_account(&mut self) -> Result<(), CtpError> {
         if !matches!(self.get_state(), ClientState::LoggedIn) {
             return Err(CtpError::AuthenticationError("用户未登录".to_string()));
         }
@@ -553,27 +553,8 @@ impl CtpClient {
                     });
                 }
                 
-                tracing::info!("资金账户查询请求已发送");
-                
-                // 注意：实际的账户信息将通过 TraderSpi 的 on_rsp_qry_trading_account 回调返回
-                // 这里应该等待回调结果，但为了简化实现，我们返回一个占位符
-                // 在实际应用中，应该使用异步等待机制来获取查询结果
-                
-                // 返回占位符，实际数据将通过事件系统传递
-                let account_info = AccountInfo {
-                    account_id: self.config.investor_id.clone(),
-                    available: 0.0,
-                    balance: 0.0,
-                    frozen_margin: 0.0,
-                    frozen_commission: 0.0,
-                    curr_margin: 0.0,
-                    commission: 0.0,
-                    close_profit: 0.0,
-                    position_profit: 0.0,
-                    risk_ratio: 0.0,
-                };
-                
-                Ok(account_info)
+                tracing::info!("资金账户查询请求已发送，结果将通过事件回调返回");
+                Ok(())
             } else {
                 Err(CtpError::StateError("交易 API 未初始化".to_string()))
             }
@@ -583,7 +564,7 @@ impl CtpClient {
     }
 
     /// 查询持仓信息
-    pub async fn query_positions(&mut self) -> Result<Vec<Position>, CtpError> {
+    pub async fn query_positions(&mut self) -> Result<(), CtpError> {
         if !matches!(self.get_state(), ClientState::LoggedIn) {
             return Err(CtpError::AuthenticationError("用户未登录".to_string()));
         }
@@ -616,14 +597,8 @@ impl CtpClient {
                     });
                 }
                 
-                tracing::info!("投资者持仓查询请求已发送");
-                
-                // 注意：实际的持仓信息将通过 TraderSpi 的 on_rsp_qry_investor_position 回调返回
-                // 这里应该等待回调结果，但为了简化实现，我们返回空列表
-                // 在实际应用中，应该使用异步等待机制来获取查询结果
-                
-                // 返回空列表，实际数据将通过事件系统传递
-                Ok(vec![])
+                tracing::info!("投资者持仓查询请求已发送，结果将通过事件回调返回");
+                Ok(())
             } else {
                 Err(CtpError::StateError("交易 API 未初始化".to_string()))
             }
@@ -831,6 +806,193 @@ impl CtpClient {
     pub fn is_instrument_subscribed(&self, instrument_id: &str) -> bool {
         let subscribed = self.subscribed_instruments.lock().unwrap();
         subscribed.contains(instrument_id)
+    }
+
+    /// 查询成交记录
+    pub async fn query_trades(&mut self, instrument_id: Option<&str>) -> Result<(), CtpError> {
+        if !matches!(self.get_state(), ClientState::LoggedIn) {
+            return Err(CtpError::AuthenticationError("用户未登录".to_string()));
+        }
+        
+        tracing::info!("查询成交记录");
+        
+        // 使用真实的 CTP API 查询成交记录
+        if let Some(api_manager) = &self.api_manager {
+            if let Some(trader_api) = api_manager.get_trader_api() {
+                // 创建成交查询请求
+                let mut qry_req = ctp2rs::v1alpha1::CThostFtdcQryTradeField::default();
+                
+                // 使用 ctp2rs 提供的字符串赋值工具
+                use ctp2rs::ffi::AssignFromString;
+                qry_req.BrokerID.assign_from_str(&self.config.broker_id);
+                qry_req.InvestorID.assign_from_str(&self.config.investor_id);
+                
+                // 如果指定了合约，则只查询该合约的成交
+                if let Some(instrument) = instrument_id {
+                    qry_req.InstrumentID.assign_from_str(instrument);
+                }
+                
+                let request_id = self.get_next_request_id();
+                
+                tracing::info!("发送成交查询请求，请求ID: {}", request_id);
+                
+                // 调用 ctp2rs TraderApi 查询成交
+                let result = trader_api.req_qry_trade(&mut qry_req, request_id);
+                
+                if result != 0 {
+                    return Err(CtpError::CtpApiError {
+                        code: result,
+                        message: "成交查询请求发送失败".to_string(),
+                    });
+                }
+                
+                tracing::info!("成交查询请求已发送，结果将通过事件回调返回");
+                Ok(())
+            } else {
+                Err(CtpError::StateError("交易 API 未初始化".to_string()))
+            }
+        } else {
+            Err(CtpError::StateError("API 管理器未初始化".to_string()))
+        }
+    }
+
+    /// 查询报单记录
+    pub async fn query_orders(&mut self, instrument_id: Option<&str>) -> Result<(), CtpError> {
+        if !matches!(self.get_state(), ClientState::LoggedIn) {
+            return Err(CtpError::AuthenticationError("用户未登录".to_string()));
+        }
+        
+        tracing::info!("查询报单记录");
+        
+        // 使用真实的 CTP API 查询报单记录
+        if let Some(api_manager) = &self.api_manager {
+            if let Some(trader_api) = api_manager.get_trader_api() {
+                // 创建报单查询请求
+                let mut qry_req = ctp2rs::v1alpha1::CThostFtdcQryOrderField::default();
+                
+                // 使用 ctp2rs 提供的字符串赋值工具
+                use ctp2rs::ffi::AssignFromString;
+                qry_req.BrokerID.assign_from_str(&self.config.broker_id);
+                qry_req.InvestorID.assign_from_str(&self.config.investor_id);
+                
+                // 如果指定了合约，则只查询该合约的报单
+                if let Some(instrument) = instrument_id {
+                    qry_req.InstrumentID.assign_from_str(instrument);
+                }
+                
+                let request_id = self.get_next_request_id();
+                
+                tracing::info!("发送报单查询请求，请求ID: {}", request_id);
+                
+                // 调用 ctp2rs TraderApi 查询报单
+                let result = trader_api.req_qry_order(&mut qry_req, request_id);
+                
+                if result != 0 {
+                    return Err(CtpError::CtpApiError {
+                        code: result,
+                        message: "报单查询请求发送失败".to_string(),
+                    });
+                }
+                
+                tracing::info!("报单查询请求已发送，结果将通过事件回调返回");
+                Ok(())
+            } else {
+                Err(CtpError::StateError("交易 API 未初始化".to_string()))
+            }
+        } else {
+            Err(CtpError::StateError("API 管理器未初始化".to_string()))
+        }
+    }
+
+    /// 查询结算信息
+    pub async fn query_settlement_info(&mut self, trading_day: Option<&str>) -> Result<(), CtpError> {
+        if !matches!(self.get_state(), ClientState::LoggedIn) {
+            return Err(CtpError::AuthenticationError("用户未登录".to_string()));
+        }
+        
+        tracing::info!("查询结算信息");
+        
+        // 使用真实的 CTP API 查询结算信息
+        if let Some(api_manager) = &self.api_manager {
+            if let Some(trader_api) = api_manager.get_trader_api() {
+                // 创建结算信息查询请求
+                let mut qry_req = ctp2rs::v1alpha1::CThostFtdcQrySettlementInfoField::default();
+                
+                // 使用 ctp2rs 提供的字符串赋值工具
+                use ctp2rs::ffi::AssignFromString;
+                qry_req.BrokerID.assign_from_str(&self.config.broker_id);
+                qry_req.InvestorID.assign_from_str(&self.config.investor_id);
+                
+                // 如果指定了交易日，则查询指定日期的结算信息
+                if let Some(day) = trading_day {
+                    qry_req.TradingDay.assign_from_str(day);
+                }
+                
+                let request_id = self.get_next_request_id();
+                
+                tracing::info!("发送结算信息查询请求，请求ID: {}", request_id);
+                
+                // 调用 ctp2rs TraderApi 查询结算信息
+                let result = trader_api.req_qry_settlement_info(&mut qry_req, request_id);
+                
+                if result != 0 {
+                    return Err(CtpError::CtpApiError {
+                        code: result,
+                        message: "结算信息查询请求发送失败".to_string(),
+                    });
+                }
+                
+                tracing::info!("结算信息查询请求已发送，结果将通过事件回调返回");
+                Ok(())
+            } else {
+                Err(CtpError::StateError("交易 API 未初始化".to_string()))
+            }
+        } else {
+            Err(CtpError::StateError("API 管理器未初始化".to_string()))
+        }
+    }
+
+    /// 确认结算信息
+    pub async fn confirm_settlement_info(&mut self) -> Result<(), CtpError> {
+        if !matches!(self.get_state(), ClientState::LoggedIn) {
+            return Err(CtpError::AuthenticationError("用户未登录".to_string()));
+        }
+        
+        tracing::info!("确认结算信息");
+        
+        // 使用真实的 CTP API 确认结算信息
+        if let Some(api_manager) = &self.api_manager {
+            if let Some(trader_api) = api_manager.get_trader_api() {
+                // 创建结算信息确认请求
+                let mut confirm_req = ctp2rs::v1alpha1::CThostFtdcSettlementInfoConfirmField::default();
+                
+                // 使用 ctp2rs 提供的字符串赋值工具
+                use ctp2rs::ffi::AssignFromString;
+                confirm_req.BrokerID.assign_from_str(&self.config.broker_id);
+                confirm_req.InvestorID.assign_from_str(&self.config.investor_id);
+                
+                let request_id = self.get_next_request_id();
+                
+                tracing::info!("发送结算信息确认请求，请求ID: {}", request_id);
+                
+                // 调用 ctp2rs TraderApi 确认结算信息
+                let result = trader_api.req_settlement_info_confirm(&mut confirm_req, request_id);
+                
+                if result != 0 {
+                    return Err(CtpError::CtpApiError {
+                        code: result,
+                        message: "结算信息确认请求发送失败".to_string(),
+                    });
+                }
+                
+                tracing::info!("结算信息确认请求已发送，结果将通过事件回调返回");
+                Ok(())
+            } else {
+                Err(CtpError::StateError("交易 API 未初始化".to_string()))
+            }
+        } else {
+            Err(CtpError::StateError("API 管理器未初始化".to_string()))
+        }
     }
 
     /// 获取已订阅合约列表

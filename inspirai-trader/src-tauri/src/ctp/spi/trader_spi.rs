@@ -314,6 +314,7 @@ impl ctp2rs::v1alpha1::TraderSpi for TraderSpiImpl {
             if err.ErrorID != 0 {
                 let msg = gb18030_cstr_i8_to_str(&err.ErrorMsg).unwrap_or_else(|_| "Unknown error".into()).to_string();
                 error!("查询持仓失败: {} ({})", msg, err.ErrorID);
+                self.send_event(CtpEvent::Error(format!("查询持仓失败: {}", msg)));
                 return;
             }
         }
@@ -324,6 +325,7 @@ impl ctp2rs::v1alpha1::TraderSpi for TraderSpiImpl {
             if let Ok(pos) = position {
                 let instrument_id = pos.instrument_id.clone();
                 self.positions.lock().unwrap().insert(instrument_id, pos.clone());
+                // 发送单个持仓更新事件
                 self.send_event(CtpEvent::PositionUpdate(vec![pos]));
             }
         }
@@ -331,6 +333,8 @@ impl ctp2rs::v1alpha1::TraderSpi for TraderSpiImpl {
         if is_last {
             let positions = self.get_all_positions();
             info!("持仓查询完成，共{}条记录", positions.len());
+            // 发送查询结果事件
+            self.send_event(CtpEvent::QueryPositionsResult(positions));
         }
     }
 
@@ -346,6 +350,7 @@ impl ctp2rs::v1alpha1::TraderSpi for TraderSpiImpl {
             if err.ErrorID != 0 {
                 let msg = gb18030_cstr_i8_to_str(&err.ErrorMsg).unwrap_or_else(|_| "Unknown error".into()).to_string();
                 error!("查询资金账户失败: {} ({})", msg, err.ErrorID);
+                self.send_event(CtpEvent::Error(format!("查询资金账户失败: {}", msg)));
                 return;
             }
         }
@@ -354,8 +359,11 @@ impl ctp2rs::v1alpha1::TraderSpi for TraderSpiImpl {
             let account_info = DataConverter::convert_account(acc_field);
             
             if let Ok(info) = account_info {
-                info!("资金账户: 余额={:.2}, 可用={:.2}", info.balance, info.available);
-                self.send_event(CtpEvent::AccountUpdate(info));
+                info!("资金账户查询结果: 余额={:.2}, 可用={:.2}", info.balance, info.available);
+                // 发送账户更新事件
+                self.send_event(CtpEvent::AccountUpdate(info.clone()));
+                // 发送查询结果事件
+                self.send_event(CtpEvent::QueryAccountResult(info));
             }
         }
     }
@@ -368,10 +376,14 @@ impl ctp2rs::v1alpha1::TraderSpi for TraderSpiImpl {
         _request_id: i32,
         is_last: bool,
     ) {
+        // 使用静态变量收集查询结果
+        static mut TRADE_QUERY_RESULTS: Vec<TradeRecord> = Vec::new();
+        
         if let Some(err) = error {
             if err.ErrorID != 0 {
                 let msg = gb18030_cstr_i8_to_str(&err.ErrorMsg).unwrap_or_else(|_| "Unknown error".into()).to_string();
                 error!("查询成交失败: {} ({})", msg, err.ErrorID);
+                self.send_event(CtpEvent::Error(format!("查询成交失败: {}", msg)));
                 return;
             }
         }
@@ -380,14 +392,27 @@ impl ctp2rs::v1alpha1::TraderSpi for TraderSpiImpl {
             let trade_record = DataConverter::convert_trade_record(trade_field);
             
             if let Ok(record) = trade_record {
-                info!("查询成交: {} {} {} @ {}", 
+                debug!("查询成交: {} {} {} @ {}", 
                     record.instrument_id, record.direction, record.volume, record.price);
+                
+                // 收集查询结果
+                unsafe {
+                    TRADE_QUERY_RESULTS.push(record.clone());
+                }
+                
+                // 发送单个成交更新事件
                 self.send_event(CtpEvent::TradeUpdate(record));
             }
         }
         
         if is_last {
-            info!("成交查询完成");
+            unsafe {
+                info!("成交查询完成，共{}条记录", TRADE_QUERY_RESULTS.len());
+                // 发送查询结果事件
+                self.send_event(CtpEvent::QueryTradesResult(TRADE_QUERY_RESULTS.clone()));
+                // 清空结果集
+                TRADE_QUERY_RESULTS.clear();
+            }
         }
     }
 
@@ -399,10 +424,14 @@ impl ctp2rs::v1alpha1::TraderSpi for TraderSpiImpl {
         _request_id: i32,
         is_last: bool,
     ) {
+        // 使用静态变量收集查询结果
+        static mut ORDER_QUERY_RESULTS: Vec<OrderStatus> = Vec::new();
+        
         if let Some(err) = error {
             if err.ErrorID != 0 {
                 let msg = gb18030_cstr_i8_to_str(&err.ErrorMsg).unwrap_or_else(|_| "Unknown error".into()).to_string();
                 error!("查询报单失败: {} ({})", msg, err.ErrorID);
+                self.send_event(CtpEvent::Error(format!("查询报单失败: {}", msg)));
                 return;
             }
         }
@@ -415,12 +444,25 @@ impl ctp2rs::v1alpha1::TraderSpi for TraderSpiImpl {
                 self.orders.lock().unwrap().insert(order_id.clone(), status.clone());
                 
                 debug!("查询报单: {} 状态={:?}", order_id, status.status);
+                
+                // 收集查询结果
+                unsafe {
+                    ORDER_QUERY_RESULTS.push(status.clone());
+                }
+                
+                // 发送单个订单更新事件
                 self.send_event(CtpEvent::OrderUpdate(status));
             }
         }
         
         if is_last {
-            info!("报单查询完成");
+            unsafe {
+                info!("报单查询完成，共{}条记录", ORDER_QUERY_RESULTS.len());
+                // 发送查询结果事件
+                self.send_event(CtpEvent::QueryOrdersResult(ORDER_QUERY_RESULTS.clone()));
+                // 清空结果集
+                ORDER_QUERY_RESULTS.clear();
+            }
         }
     }
 
@@ -436,11 +478,13 @@ impl ctp2rs::v1alpha1::TraderSpi for TraderSpiImpl {
             if err.ErrorID != 0 {
                 let msg = gb18030_cstr_i8_to_str(&err.ErrorMsg).unwrap_or_else(|_| "Unknown error".into()).to_string();
                 error!("结算信息确认失败: {} ({})", msg, err.ErrorID);
+                self.send_event(CtpEvent::Error(format!("结算信息确认失败: {}", msg)));
                 return;
             }
         }
         
         info!("结算信息确认成功");
+        self.send_event(CtpEvent::SettlementConfirmed);
     }
 
     /// 查询结算信息响应
@@ -451,10 +495,14 @@ impl ctp2rs::v1alpha1::TraderSpi for TraderSpiImpl {
         _request_id: i32,
         is_last: bool,
     ) {
+        // 使用静态变量收集结算信息内容
+        static mut SETTLEMENT_CONTENT: String = String::new();
+        
         if let Some(err) = error {
             if err.ErrorID != 0 {
                 let msg = gb18030_cstr_i8_to_str(&err.ErrorMsg).unwrap_or_else(|_| "Unknown error".into()).to_string();
                 error!("查询结算信息失败: {} ({})", msg, err.ErrorID);
+                self.send_event(CtpEvent::Error(format!("查询结算信息失败: {}", msg)));
                 return;
             }
         }
@@ -464,14 +512,22 @@ impl ctp2rs::v1alpha1::TraderSpi for TraderSpiImpl {
                 .unwrap_or_default().to_string();
             
             if !content.is_empty() {
-                info!("收到结算信息: {} 字符", content.len());
-                // 这里可以发送结算信息事件
-                // self.send_event(CtpEvent::SettlementInfo(content));
+                debug!("收到结算信息片段: {} 字符", content.len());
+                // 累积结算信息内容
+                unsafe {
+                    SETTLEMENT_CONTENT.push_str(&content);
+                }
             }
         }
         
         if is_last {
-            info!("结算信息查询完成");
+            unsafe {
+                info!("结算信息查询完成，总长度: {} 字符", SETTLEMENT_CONTENT.len());
+                // 发送完整的结算信息
+                self.send_event(CtpEvent::QuerySettlementResult(SETTLEMENT_CONTENT.clone()));
+                // 清空内容
+                SETTLEMENT_CONTENT.clear();
+            }
         }
     }
 
