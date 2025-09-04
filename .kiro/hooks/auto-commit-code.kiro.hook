@@ -1,0 +1,27 @@
+{
+  "enabled": true,
+  "name": "自动代码提交",
+  "description": "监控代码文件变化，自动提交所有应该提供的代码并生成正确的提交注释",
+  "version": "1",
+  "when": {
+    "type": "userTriggered",
+    "patterns": [
+      "**/*.rs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.toml",
+      "**/*.json",
+      "**/*.md",
+      "**/*.sql",
+      "**/*.h",
+      "**/*.cpp",
+      "**/*.c"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "检测到代码文件变化。请分析变化的文件内容，确定哪些代码应该提交，然后：\n1. 使用 git add 添加所有应该提交的文件\n2. 根据变化内容生成一个清晰、准确的中文提交信息\n3. 执行 git commit 提交代码\n4. 提交信息应该遵循以下格式：\n   - feat: 新功能\n   - fix: 修复bug\n   - docs: 文档更新\n   - style: 代码格式调整\n   - refactor: 代码重构\n   - test: 测试相关\n   - chore: 构建过程或辅助工具的变动\n\n请确保提交信息准确描述了代码变化的内容和目的。"
+  }
+}

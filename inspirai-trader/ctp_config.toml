@@ -1,0 +1,43 @@
+# CTP 交易组件配置文件
+
+[connection]
+# 行情前置地址（SimNow 模拟环境）
+md_front_addr = "tcp://180.168.146.187:10131"
+# 交易前置地址（SimNow 模拟环境）
+trader_front_addr = "tcp://180.168.146.187:10130"
+
+[credentials]
+# 经纪商代码
+broker_id = "9999"
+# 投资者代码（需要用户填写）
+investor_id = ""
+# 密码（需要用户填写）
+password = ""
+# 应用标识
+app_id = "simnow_client_test"
+# 授权编码
+auth_code = "0000000000000000"
+
+[settings]
+# 流文件路径
+flow_path = "./ctp_flow/"
+# 超时时间（秒）
+timeout_secs = 30
+# 重连间隔（秒）
+reconnect_interval_secs = 5
+# 最大重连次数
+max_reconnect_attempts = 3
+
+[logging]
+# 日志级别 (trace, debug, info, warn, error)
+level = "info"
+# 日志文件路径
+file_path = "./logs/ctp.log"
+# 是否启用控制台输出
+console = true
+
+[environment]
+# 环境类型 (development, testing, production)
+env_type = "development"
+# 是否启用模拟模式
+simulation_mode = true

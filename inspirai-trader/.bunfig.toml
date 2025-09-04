@@ -1,0 +1,22 @@
+# Bun 配置文件
+
+[install]
+# 使用更快的安装策略
+strategy = "hardlink"
+
+# 自动安装 peer dependencies
+auto = true
+
+# 缓存配置
+cache = true
+
+[install.scopes]
+# 可以在这里配置私有包的 scope
+
+[run]
+# 运行脚本时的配置
+shell = "zsh"
+
+[test]
+# 测试配置
+preload = ["./test-setup.ts"]

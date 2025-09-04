@@ -1,0 +1,44 @@
+# 生产环境配置文件
+# 警告：这是生产环境配置，请谨慎修改！
+
+# CTP 连接配置
+# 行情前置地址
+md_front_addr = "tcp://58.62.16.148:41214"
+# 交易前置地址
+trader_front_addr = "tcp://58.62.16.148:41206"
+# 经纪商代码
+broker_id = "5071"
+# 投资者代码
+investor_id = "00001"
+# 密码
+password = "abc123456"
+# 应用标识
+app_id = "inspirai_strategy_1.0.0"
+# 授权编码
+auth_code = "QHFK5E2GLEUB9XHV"
+# 流文件路径
+flow_path = "./ctp_flow/production/"
+# 行情动态库路径
+md_dynlib_path = "../lib/macos/6.7.7/cepin/thostmduserapi_se.framework/thostmduserapi_se"
+# 交易动态库路径
+td_dynlib_path = "../lib/macos/6.7.7/cepin/thosttraderapi_se.framework/thosttraderapi_se"
+# 超时时间（秒）
+timeout_secs = 30
+# 重连间隔（秒）
+reconnect_interval_secs = 5
+# 最大重连次数
+max_reconnect_attempts = 3
+
+[logging]
+# 日志级别: trace, debug, info, warn, error
+level = "warn"
+# 日志文件路径
+file_path = "./logs/ctp_production.log"
+# 是否在控制台输出日志（生产环境建议关闭）
+console = false
+
+[environment]
+# 环境类型
+env_type = "production"
+# 是否启用模拟模式（生产环境必须为 false）
+simulation_mode = false

@@ -1,0 +1,22 @@
+md_front_addr = "tcp://121.37.80.177:20004"
+trader_front_addr = "tcp://121.37.80.177:20002"
+broker_id = "9999"
+investor_id = ""
+password = ""
+app_id = "simnow_client_test"
+auth_code = "0000000000000000"
+flow_path = "./ctp_flow/tts/"
+md_dynlib_path = "../lib/macos/6.7.7/cepin/thostmduserapi_se.framework/thostmduserapi_se"
+td_dynlib_path = "../lib/macos/6.7.7/cepin/thosttraderapi_se.framework/thosttraderapi_se"
+timeout_secs = 30
+reconnect_interval_secs = 5
+max_reconnect_attempts = 3
+
+[environment]
+env_type = "tts"
+simulation_mode = true
+
+[logging]
+level = "info"
+file_path = "./logs/ctp_tts.log"
+console = true

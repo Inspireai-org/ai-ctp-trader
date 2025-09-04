@@ -1,0 +1,63 @@
+# Rust
+target/
+Cargo.lock
+*.pdb
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# CTP flow files
+**/ctp_*_flow*/
+**/*.con
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Node.js (for Tauri frontend)
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Build artifacts
+*.dmg
+*.app
+*.deb
+*.AppImage
+*.msi
+*.exe

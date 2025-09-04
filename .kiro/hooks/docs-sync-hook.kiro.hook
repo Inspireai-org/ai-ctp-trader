@@ -1,0 +1,45 @@
+{
+  "enabled": true,
+  "name": "Documentation Sync",
+  "description": "Monitors source code files and automatically updates documentation in README or docs folder when changes are detected",
+  "version": "1",
+  "when": {
+    "type": "userTriggered",
+    "patterns": [
+      "*.rs",
+      "*.ts",
+      "*.tsx",
+      "*.js",
+      "*.jsx",
+      "*.py",
+      "*.java",
+      "*.cpp",
+      "*.c",
+      "*.h",
+      "*.go",
+      "*.php",
+      "*.rb",
+      "*.swift",
+      "*.kt",
+      "*.scala",
+      "src/**/*",
+      "lib/**/*",
+      "components/**/*",
+      "services/**/*",
+      "utils/**/*",
+      "hooks/**/*",
+      "stores/**/*",
+      "pages/**/*",
+      "commands/**/*",
+      "database/**/*",
+      "Cargo.toml",
+      "package.json",
+      "tsconfig.json",
+      "tauri.conf.json"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Source code files have been modified. Please analyze the changes and update the documentation accordingly. If there is a README.md file, update it to reflect any new features, API changes, or architectural modifications. If there is a /docs folder, update the relevant documentation files there as well. Focus on keeping the documentation synchronized with the current codebase, including any new functions, components, configuration changes, or usage examples. Make sure to maintain consistency with the existing documentation style and structure."
+  }
+}
