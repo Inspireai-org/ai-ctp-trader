@@ -44,6 +44,10 @@ pub struct TraderSpiImpl {
     max_order_ref: Arc<Mutex<i32>>,
 }
 
+// 实现 Send 和 Sync trait 以支持多线程环境
+unsafe impl Send for TraderSpiImpl {}
+unsafe impl Sync for TraderSpiImpl {}
+
 impl TraderSpiImpl {
     /// 创建新的交易 SPI 实例
     pub fn new(

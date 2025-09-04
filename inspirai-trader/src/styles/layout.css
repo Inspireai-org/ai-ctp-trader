@@ -1,0 +1,132 @@
+/* 布局样式 */
+.react-grid-layout {
+  position: relative;
+  min-height: calc(100vh - 56px);
+}
+
+/* 网格项样式 */
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top, transform;
+  display: flex;
+  flex-direction: column;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform, left, top;
+}
+
+.react-grid-item.resizing {
+  transition: none;
+  z-index: 1;
+  will-change: width, height;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 3;
+  will-change: transform;
+  cursor: move;
+}
+
+.react-grid-item.dropping {
+  visibility: hidden;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: var(--color-primary);
+  opacity: 0.2;
+  transition-duration: 100ms;
+  z-index: 2;
+  border-radius: 4px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+/* 调整手柄样式 */
+.react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-repeat: no-repeat;
+  background-origin: content-box;
+  box-sizing: border-box;
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTAgMTBMIDEwIDAiIHN0cm9rZT0iIzg4ODg4OCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgPHBhdGggZD0iTTQgMTBMIDEwIDQiIHN0cm9rZT0iIzg4ODg4OCIgc3Ryb2tlLXdpZHRoPSIxIi8+Cjwvc3ZnPg==');
+  background-position: bottom right;
+  padding: 0 3px 3px 0;
+  cursor: se-resize;
+}
+
+.react-resizable-handle-se {
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+}
+
+/* 全屏面板样式 */
+.fullscreen-panel {
+  position: fixed !important;
+  top: 48px !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: calc(100vh - 48px) !important;
+  z-index: 1000;
+  transform: none !important;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .react-grid-item {
+    margin: 2px;
+  }
+  
+  .react-resizable-handle {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .react-grid-item {
+    margin: 3px;
+  }
+}
+
+/* 面板内容滚动 */
+.panel-content {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+}
+
+/* 面板拖拽时的视觉反馈 */
+.react-grid-item.react-draggable-dragging {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  opacity: 0.95;
+}
+
+/* 面板调整大小时的视觉反馈 */
+.react-grid-item.resizing {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0.95;
+}
+
+/* 锁定状态下禁用交互 */
+.layout-locked .react-resizable-handle {
+  display: none;
+}
+
+.layout-locked .react-grid-item {
+  cursor: default;
+}
+
+/* 面板头部拖拽区域 */
+.panel-header-drag-handle {
+  cursor: move;
+  flex: 1;
+}

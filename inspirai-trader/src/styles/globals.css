@@ -1,3 +1,6 @@
+/* 导入布局样式 */
+@import './layout.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

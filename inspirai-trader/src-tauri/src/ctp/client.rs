@@ -160,9 +160,9 @@ impl CtpClient {
             self.config.clone(),
         );
         
-        // 注册 SPI 到对应的 API
-        api_manager.register_md_spi(Box::new(md_spi))?;
-        api_manager.register_trader_spi(Box::new(trader_spi))?;
+        // 注册 SPI 到对应的 API（现在支持 Send trait）
+        api_manager.register_md_spi(Box::new(md_spi) as Box<dyn ctp2rs::v1alpha1::MdSpi + Send>)?;
+        api_manager.register_trader_spi(Box::new(trader_spi) as Box<dyn ctp2rs::v1alpha1::TraderSpi + Send>)?;
         
         tracing::info!("SPI 回调处理器设置完成");
         Ok(())

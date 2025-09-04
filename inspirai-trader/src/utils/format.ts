@@ -183,6 +183,19 @@ export const formatRiskRatio = (riskRatio: number): string => {
 };
 
 /**
+ * 格式化数字（带千分位）
+ * @param num 数字
+ * @returns 格式化后的数字字符串
+ */
+export const formatNumber = (num: number | undefined | null): string => {
+  if (num === undefined || num === null || isNaN(num)) {
+    return '--';
+  }
+  
+  return new Intl.NumberFormat('zh-CN').format(num);
+};
+
+/**
  * 格式化合约代码显示
  * @param instrumentId 合约代码
  * @returns 格式化后的合约代码

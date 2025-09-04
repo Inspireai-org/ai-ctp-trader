@@ -12,9 +12,13 @@ use std::sync::Arc;
 pub struct CtpApiManager {
     md_api: Option<Arc<MdApi>>,
     trader_api: Option<Arc<TraderApi>>,
-    md_spi: Option<Box<dyn ctp2rs::v1alpha1::MdSpi>>,
-    trader_spi: Option<Box<dyn ctp2rs::v1alpha1::TraderSpi>>,
+    md_spi: Option<Box<dyn ctp2rs::v1alpha1::MdSpi + Send>>,
+    trader_spi: Option<Box<dyn ctp2rs::v1alpha1::TraderSpi + Send>>,
 }
+
+// 实现 Send 和 Sync trait 以支持多线程环境
+unsafe impl Send for CtpApiManager {}
+unsafe impl Sync for CtpApiManager {}
 
 impl CtpApiManager {
     /// 创建新的 CTP API 管理器
@@ -99,7 +103,7 @@ impl CtpApiManager {
     }
 
     /// 注册行情 SPI
-    pub fn register_md_spi(&mut self, spi: Box<dyn ctp2rs::v1alpha1::MdSpi>) -> Result<(), CtpError> {
+    pub fn register_md_spi(&mut self, spi: Box<dyn ctp2rs::v1alpha1::MdSpi + Send>) -> Result<(), CtpError> {
         tracing::info!("注册行情 SPI");
         
         if let Some(md_api) = &self.md_api {
@@ -116,7 +120,7 @@ impl CtpApiManager {
     }
 
     /// 注册交易 SPI
-    pub fn register_trader_spi(&mut self, spi: Box<dyn ctp2rs::v1alpha1::TraderSpi>) -> Result<(), CtpError> {
+    pub fn register_trader_spi(&mut self, spi: Box<dyn ctp2rs::v1alpha1::TraderSpi + Send>) -> Result<(), CtpError> {
         tracing::info!("注册交易 SPI");
         
         if let Some(trader_api) = &self.trader_api {

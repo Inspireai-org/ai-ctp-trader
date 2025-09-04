@@ -3,9 +3,7 @@
  */
 
 export { default as TradingLayout } from './TradingLayout';
-export { default as PanelContainer } from './PanelContainer';
-export { default as ResizablePanel } from './ResizablePanel';
+export { default as LayoutPresets, layoutPresets } from './LayoutPresets';
+export { default as PanelVisibilityManager } from './PanelVisibilityManager';
 
 export type { TradingLayoutProps } from './TradingLayout';
-export type { PanelContainerProps } from './PanelContainer';
-export type { ResizablePanelProps } from './ResizablePanel';

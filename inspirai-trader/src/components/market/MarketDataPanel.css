@@ -1,0 +1,102 @@
+.market-data-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.market-data-header {
+  padding: 8px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+/* 价格变动动画 */
+@keyframes priceFlash {
+  0% { 
+    background-color: transparent; 
+  }
+  50% { 
+    background-color: var(--active-color);
+    opacity: 0.3;
+  }
+  100% { 
+    background-color: transparent; 
+  }
+}
+
+.price-update {
+  animation: priceFlash 0.5s ease-in-out;
+}
+
+/* 价格颜色 */
+.price-up {
+  color: var(--color-up) !important;
+}
+
+.price-down {
+  color: var(--color-down) !important;
+}
+
+.price-neutral {
+  color: var(--color-neutral) !important;
+}
+
+/* 选中行样式 */
+.selected-row {
+  background-color: var(--hover-color) !important;
+}
+
+.selected-row:hover td {
+  background-color: var(--hover-color) !important;
+}
+
+/* 自定义表格样式 */
+.market-data-panel .ant-table {
+  background: var(--bg-secondary);
+}
+
+.market-data-panel .ant-table-thead > tr > th {
+  background: var(--bg-tertiary);
+  font-weight: 600;
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+.market-data-panel .ant-table-tbody > tr > td {
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.market-data-panel .ant-table-tbody > tr:hover > td {
+  background: var(--hover-color);
+  cursor: pointer;
+}
+
+/* 虚拟滚动优化 */
+.market-data-panel .ant-table-body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.market-data-panel .ant-table-body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.market-data-panel .ant-table-body::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 3px;
+}
+
+.market-data-panel .ant-table-body::-webkit-scrollbar-thumb:hover {
+  background-color: var(--hover-color);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .market-data-panel .ant-table-thead > tr > th,
+  .market-data-panel .ant-table-tbody > tr > td {
+    padding: 2px 4px;
+    font-size: 11px;
+  }
+}

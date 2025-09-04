@@ -1,9 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { ConfigProvider, theme, App as AntApp } from "antd";
+import { ConfigProvider, theme, App as AntApp, Button, message } from "antd";
+import { ApiOutlined, DisconnectOutlined } from "@ant-design/icons";
 import zhCN from "antd/locale/zh_CN";
 import { TradingLayout } from "@components/layout";
 import { useUIStore } from "@stores/ui";
 import { ErrorBoundary } from "@components/common";
+import CtpConnectionDialog from "@components/connection/CtpConnectionDialog";
+import { ctpService } from "@services/tauri";
+import { useMarketDataStore } from "@stores/marketData";
+import { UnlistenFn } from "@tauri-apps/api/event";
+import type { MarketDataTick } from "@/types";
+import { ConnectionStatus, ClientState } from "@/types";
 import "@styles/globals.css";
 
 /**
@@ -19,6 +26,11 @@ import "@styles/globals.css";
 const App: React.FC = () => {
   const { theme: currentTheme, initializeTheme } = useUIStore();
   const [isInitialized, setIsInitialized] = useState(false);
+  const [connectionDialogVisible, setConnectionDialogVisible] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [marketDataListener, setMarketDataListener] = useState<UnlistenFn | null>(null);
+  
+  const { connectionStatus, setConnectionStatus, updateTick } = useMarketDataStore();
 
   // 初始化主题和应用配置
   useEffect(() => {
@@ -42,6 +54,62 @@ const App: React.FC = () => {
 
     initApp();
   }, [currentTheme, initializeTheme]);
+
+  // 设置市场数据监听器
+  useEffect(() => {
+    if (isConnected) {
+      setupMarketDataListener();
+    }
+
+    return () => {
+      if (marketDataListener) {
+        marketDataListener();
+      }
+    };
+  }, [isConnected]);
+
+  const setupMarketDataListener = async () => {
+    try {
+      // 监听市场数据更新
+      const unlisten = await ctpService.listenToMarketData((tick: MarketDataTick) => {
+        // 更新 store 中的行情数据
+        updateTick(tick);
+      });
+      
+      setMarketDataListener(unlisten);
+      
+      // 监听连接状态变化
+      await ctpService.listenToConnectionStatus((status) => {
+        setConnectionStatus(status === ClientState.LOGGED_IN ? ConnectionStatus.CONNECTED : 
+                          status === ClientState.DISCONNECTED ? ConnectionStatus.DISCONNECTED : ConnectionStatus.CONNECTING);
+      });
+      
+      message.success('实时行情数据监听已启动');
+    } catch (error) {
+      console.error('设置市场数据监听器失败:', error);
+      message.error('启动行情监听失败');
+    }
+  };
+
+  const handleConnect = () => {
+    setConnectionDialogVisible(true);
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      await ctpService.disconnect();
+      setIsConnected(false);
+      setConnectionStatus(ConnectionStatus.DISCONNECTED);
+      message.info('已断开 CTP 连接');
+    } catch (error) {
+      message.error('断开连接失败');
+    }
+  };
+
+  const handleConnected = () => {
+    setIsConnected(true);
+    setConnectionDialogVisible(false);
+  };
 
   // 主题配置
   const antdTheme = {
@@ -145,7 +213,36 @@ const App: React.FC = () => {
       >
         <AntApp>
           <div className="app-container min-h-screen bg-bg-primary text-text-primary">
+            {/* 连接状态栏 */}
+            <div className="fixed top-0 right-0 z-50 p-4">
+              {!isConnected ? (
+                <Button 
+                  type="primary" 
+                  icon={<ApiOutlined />}
+                  onClick={handleConnect}
+                >
+                  连接 CTP
+                </Button>
+              ) : (
+                <Button 
+                  danger
+                  icon={<DisconnectOutlined />}
+                  onClick={handleDisconnect}
+                >
+                  断开连接 ({connectionStatus})
+                </Button>
+              )}
+            </div>
+            
+            {/* 主交易界面 */}
             <TradingLayout />
+            
+            {/* CTP 连接对话框 */}
+            <CtpConnectionDialog
+              visible={connectionDialogVisible}
+              onClose={() => setConnectionDialogVisible(false)}
+              onConnected={handleConnected}
+            />
           </div>
         </AntApp>
       </ConfigProvider>
