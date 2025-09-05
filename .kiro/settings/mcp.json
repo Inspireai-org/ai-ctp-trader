@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "Git": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-git",
+        "--repository",
+        "/Users/alexxiong/Documents/01-Projects/Products/ai-ctp-trader"
+      ],
+      "env": {}
+    }
+  }
+}

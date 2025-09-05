@@ -1,9 +1,9 @@
 // CTP 交易组件模块
 pub mod ctp;
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tauri::State;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 
 // 应用状态
 struct AppState {
@@ -48,7 +48,7 @@ async fn ctp_connect(
             
             // 设置客户端到状态
             {
-                let mut client = state.ctp_client.lock().unwrap();
+                let mut client = state.ctp_client.lock().await;
                 *client = Some(new_client);
             }
             
@@ -66,34 +66,15 @@ async fn ctp_login(
 ) -> Result<String, String> {
     let user_id = credentials.user_id.clone();
     
-    // 检查客户端是否存在
-    {
-        let client = state.ctp_client.lock().unwrap();
-        if client.is_none() {
-            return Err("请先连接到 CTP 服务器".to_string());
+    // 获取客户端并执行登录
+    let mut client_guard = state.ctp_client.lock().await;
+    if let Some(ref mut client) = client_guard.as_mut() {
+        match client.login(credentials).await {
+            Ok(_) => Ok(format!("用户 {} 登录成功", user_id)),
+            Err(e) => Err(format!("登录失败: {}", e)),
         }
-    }
-    
-    // 克隆必要的数据，避免跨 await 持有锁
-    let credentials_clone = credentials.clone();
-    
-    // 执行登录操作
-    let login_result = {
-        // 获取锁，执行操作，立即释放
-        let mut client_guard = state.ctp_client.lock().unwrap();
-        if let Some(ref mut client) = *client_guard {
-            // 在锁的作用域内启动异步操作
-            let future = client.login(credentials_clone);
-            drop(client_guard); // 显式释放锁
-            future.await // 在锁释放后等待结果
-        } else {
-            return Err("客户端已断开连接".to_string());
-        }
-    };
-    
-    match login_result {
-        Ok(_) => Ok(format!("用户 {} 登录成功", user_id)),
-        Err(e) => Err(format!("登录失败: {}", e)),
+    } else {
+        Err("请先连接到 CTP 服务器".to_string())
     }
 }
 
@@ -105,34 +86,15 @@ async fn ctp_subscribe(
 ) -> Result<String, String> {
     let count = instrument_ids.len();
     
-    // 检查客户端是否存在
-    {
-        let client = state.ctp_client.lock().unwrap();
-        if client.is_none() {
-            return Err("请先连接并登录 CTP".to_string());
+    // 获取客户端并执行订阅
+    let mut client_guard = state.ctp_client.lock().await;
+    if let Some(ref mut client) = client_guard.as_mut() {
+        match client.subscribe_market_data(&instrument_ids).await {
+            Ok(_) => Ok(format!("已订阅 {} 个合约", count)),
+            Err(e) => Err(format!("订阅失败: {}", e)),
         }
-    }
-    
-    // 克隆必要的数据，避免跨 await 持有锁
-    let instruments_clone = instrument_ids.clone();
-    
-    // 执行订阅操作
-    let subscribe_result = {
-        // 获取锁，执行操作，立即释放
-        let mut client_guard = state.ctp_client.lock().unwrap();
-        if let Some(ref mut client) = *client_guard {
-            // 在锁的作用域内启动异步操作
-            let future = client.subscribe_market_data(&instruments_clone);
-            drop(client_guard); // 显式释放锁
-            future.await // 在锁释放后等待结果
-        } else {
-            return Err("客户端已断开连接".to_string());
-        }
-    };
-    
-    match subscribe_result {
-        Ok(_) => Ok(format!("已订阅 {} 个合约", count)),
-        Err(e) => Err(format!("订阅失败: {}", e)),
+    } else {
+        Err("请先连接并登录 CTP".to_string())
     }
 }
 
@@ -144,45 +106,26 @@ async fn ctp_unsubscribe(
 ) -> Result<String, String> {
     let count = instrument_ids.len();
     
-    // 检查客户端是否存在
-    {
-        let client = state.ctp_client.lock().unwrap();
-        if client.is_none() {
-            return Err("请先连接并登录 CTP".to_string());
+    // 获取客户端并执行取消订阅
+    let mut client_guard = state.ctp_client.lock().await;
+    if let Some(ref mut client) = client_guard.as_mut() {
+        match client.unsubscribe_market_data(&instrument_ids).await {
+            Ok(_) => Ok(format!("已取消订阅 {} 个合约", count)),
+            Err(e) => Err(format!("取消订阅失败: {}", e)),
         }
-    }
-    
-    // 克隆必要的数据，避免跨 await 持有锁
-    let instruments_clone = instrument_ids.clone();
-    
-    // 执行取消订阅操作
-    let unsubscribe_result = {
-        // 获取锁，执行操作，立即释放
-        let mut client_guard = state.ctp_client.lock().unwrap();
-        if let Some(ref mut client) = *client_guard {
-            // 在锁的作用域内启动异步操作
-            let future = client.unsubscribe_market_data(&instruments_clone);
-            drop(client_guard); // 显式释放锁
-            future.await // 在锁释放后等待结果
-        } else {
-            return Err("客户端已断开连接".to_string());
-        }
-    };
-    
-    match unsubscribe_result {
-        Ok(_) => Ok(format!("已取消订阅 {} 个合约", count)),
-        Err(e) => Err(format!("取消订阅失败: {}", e)),
+    } else {
+        Err("请先连接并登录 CTP".to_string())
     }
 }
 
 // 获取客户端状态
 #[tauri::command]
 async fn ctp_get_status(state: State<'_, AppState>) -> Result<String, String> {
-    let client = state.ctp_client.lock().unwrap();
+    let client = state.ctp_client.lock().await;
     
     if let Some(ref client) = *client {
-        let state = client.get_state();
-        Ok(format!("{:?}", state))
+        let client_state = client.get_state();
+        Ok(format!("{:?}", client_state))
     } else {
         Ok("Disconnected".to_string())
     }
@@ -191,7 +134,7 @@ async fn ctp_get_status(state: State<'_, AppState>) -> Result<String, String> {
 // 断开连接
 #[tauri::command]
 async fn ctp_disconnect(state: State<'_, AppState>) -> Result<String, String> {
-    let mut client = state.ctp_client.lock().unwrap();
+    let mut client = state.ctp_client.lock().await;
     
     if client.is_some() {
         *client = None;

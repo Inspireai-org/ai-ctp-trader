@@ -40,7 +40,7 @@ fn setup_ctp_libraries() {
             } else if cfg!(target_os = "linux") {
                 base_path.join("lib/linux").to_str().unwrap().to_string()
             } else if cfg!(target_os = "macos") {
-                base_path.join("lib/macos/6.7.7/cepin").to_str().unwrap().to_string()
+                base_path.join("lib/macos/6.7.7/product").to_str().unwrap().to_string()
             } else {
                 base_path.join("lib").to_str().unwrap().to_string()
             }
