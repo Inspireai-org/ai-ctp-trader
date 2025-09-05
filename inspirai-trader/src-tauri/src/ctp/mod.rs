@@ -31,6 +31,12 @@ mod production_config_test;
 #[cfg(test)]
 mod simple_production_test;
 
+#[cfg(test)]
+mod test_path_issue;
+
+#[cfg(test)]
+mod test_serde;
+
 pub use client::{CtpClient, ClientState, ConnectionStats, HealthStatus, ConfigInfo};
 pub use config::{CtpConfig, Environment};
 pub use config_manager::{ConfigManager, ExtendedCtpConfig};
@@ -57,8 +63,17 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn init() -> Result<(), CtpError> {
     tracing::info!("初始化 CTP 交易组件 v{}", VERSION);
     
-    // 检查 CTP 动态库是否可用
-    ffi::check_ctp_libraries()?;
+    // 尝试使用默认配置检查动态库
+    let default_config = CtpConfig::default();
+    if let (Some(md_path), Some(td_path)) = (&default_config.md_dynlib_path, &default_config.td_dynlib_path) {
+        if md_path.exists() && td_path.exists() {
+            ffi::check_ctp_libraries(md_path, td_path)?;
+        } else {
+            tracing::warn!("CTP 动态库文件不存在，跳过检查");
+        }
+    } else {
+        tracing::warn!("未设置 CTP 动态库路径，跳过检查");
+    }
     
     tracing::info!("CTP 交易组件初始化完成");
     Ok(())
@@ -74,8 +89,12 @@ pub fn init_with_config(config: &ExtendedCtpConfig) -> Result<(), CtpError> {
         config.ctp.environment,
     )?;
     
-    // 初始化组件
-    init()?;
+    // 使用配置中的库路径检查动态库
+    if let (Some(md_path), Some(td_path)) = (&config.ctp.md_dynlib_path, &config.ctp.td_dynlib_path) {
+        ffi::check_ctp_libraries(md_path, td_path)?;
+    } else {
+        tracing::warn!("配置中未设置 CTP 动态库路径，跳过检查");
+    }
     
     tracing::info!("使用配置初始化 CTP 组件完成");
     tracing::info!("环境: {:?}", config.ctp.environment);

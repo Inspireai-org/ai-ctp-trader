@@ -118,36 +118,37 @@ export enum Environment {
 
 /**
  * CTP 配置
+ * 注意：字段名使用 snake_case 以匹配 Rust 后端结构
  */
 export interface CtpConfig {
   /** 环境类型 */
-  environment: Environment;
+  environment: Environment | string;
   /** 行情前置地址 */
-  mdFrontAddr: string;
+  md_front_addr: string;
   /** 交易前置地址 */
-  traderFrontAddr: string;
+  trader_front_addr: string;
   /** 经纪商代码 */
-  brokerId: string;
+  broker_id: string;
   /** 投资者代码 */
-  investorId: string;
+  investor_id: string;
   /** 密码 */
   password: string;
   /** 应用标识 */
-  appId: string;
+  app_id: string;
   /** 授权编码 */
-  authCode: string;
+  auth_code: string;
   /** 流文件路径 */
-  flowPath: string;
+  flow_path: string;
   /** 行情动态库路径 */
-  mdDynlibPath?: string;
+  md_dynlib_path?: string;
   /** 交易动态库路径 */
-  tdDynlibPath?: string;
+  td_dynlib_path?: string;
   /** 超时时间（秒） */
-  timeoutSecs: number;
+  timeout_secs: number;
   /** 重连间隔（秒） */
-  reconnectIntervalSecs: number;
+  reconnect_interval_secs: number;
   /** 最大重连次数 */
-  maxReconnectAttempts: number;
+  max_reconnect_attempts: number;
 }
 
 // ============================================================================

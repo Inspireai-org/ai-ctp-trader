@@ -1,5 +1,5 @@
-# 生产环境配置文件
-# 警告：这是生产环境配置，请谨慎修改！
+# 广州期货评测环境配置文件
+# 警告：这是广州期货评测环境配置，请谨慎修改！
 
 # CTP 连接配置
 # 行情前置地址
@@ -19,9 +19,9 @@ auth_code = "QHFK5E2GLEUB9XHV"
 # 流文件路径
 flow_path = "./ctp_flow/production/"
 # 行情动态库路径
-md_dynlib_path = "../lib/macos/6.7.7/cepin/thostmduserapi_se.framework/thostmduserapi_se"
+md_dynlib_path = "lib/macos/6.7.7/cepin/thostmduserapi_se.framework/thostmduserapi_se"
 # 交易动态库路径
-td_dynlib_path = "../lib/macos/6.7.7/cepin/thosttraderapi_se.framework/thosttraderapi_se"
+td_dynlib_path = "lib/macos/6.7.7/cepin/thosttraderapi_se.framework/thosttraderapi_se"
 # 超时时间（秒）
 timeout_secs = 30
 # 重连间隔（秒）

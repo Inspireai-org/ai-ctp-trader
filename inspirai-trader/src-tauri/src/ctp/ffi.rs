@@ -33,8 +33,8 @@ impl CtpApiManager {
 
     /// 创建行情 API 实例
     /// 使用 ctp2rs 官方 API，严禁自定义实现
-    pub fn create_md_api(&mut self, flow_path: &str) -> Result<(), CtpError> {
-        tracing::info!("使用 ctp2rs 创建行情 API，流文件路径: {}", flow_path);
+    pub fn create_md_api(&mut self, flow_path: &str, dynlib_path: &std::path::Path) -> Result<(), CtpError> {
+        tracing::info!("使用 ctp2rs 创建行情 API，流文件路径: {}, 库路径: {:?}", flow_path, dynlib_path);
         
         // 创建流文件目录
         if let Err(e) = std::fs::create_dir_all(flow_path) {
@@ -42,11 +42,6 @@ impl CtpApiManager {
         }
         
         // 使用 ctp2rs 官方 API 创建行情 API 实例
-        // 需要指定动态库路径，这里使用默认路径
-        let dynlib_path = std::env::current_dir()
-            .unwrap_or_default()
-            .join("lib/macos/6.7.7/product/thostmduserapi_se.framework/thostmduserapi_se");
-        
         let api = MdApi::create_api(
             dynlib_path,
             flow_path,
@@ -61,8 +56,8 @@ impl CtpApiManager {
 
     /// 创建交易 API 实例
     /// 使用 ctp2rs 官方 API，严禁自定义实现
-    pub fn create_trader_api(&mut self, flow_path: &str) -> Result<(), CtpError> {
-        tracing::info!("使用 ctp2rs 创建交易 API，流文件路径: {}", flow_path);
+    pub fn create_trader_api(&mut self, flow_path: &str, dynlib_path: &std::path::Path) -> Result<(), CtpError> {
+        tracing::info!("使用 ctp2rs 创建交易 API，流文件路径: {}, 库路径: {:?}", flow_path, dynlib_path);
         
         // 创建流文件目录
         if let Err(e) = std::fs::create_dir_all(flow_path) {
@@ -70,11 +65,6 @@ impl CtpApiManager {
         }
         
         // 使用 ctp2rs 官方 API 创建交易 API 实例
-        // 需要指定动态库路径，这里使用默认路径
-        let dynlib_path = std::env::current_dir()
-            .unwrap_or_default()
-            .join("lib/macos/6.7.7/product/thosttraderapi_se.framework/thosttraderapi_se");
-        
         let api = TraderApi::create_api(dynlib_path, flow_path);
         
         self.trader_api = Some(Arc::new(api));
@@ -139,19 +129,17 @@ impl CtpApiManager {
 
 /// 检查 CTP 动态库是否可用
 /// 使用 ctp2rs 的库检查机制，严禁自定义实现
-pub fn check_ctp_libraries() -> Result<(), CtpError> {
+pub fn check_ctp_libraries(md_path: &std::path::Path, td_path: &std::path::Path) -> Result<(), CtpError> {
     tracing::info!("检查 CTP 动态库可用性");
+    tracing::info!("行情库路径: {:?}", md_path);
+    tracing::info!("交易库路径: {:?}", td_path);
     
     // 尝试创建临时的 API 实例来验证库是否可用
     let temp_flow_path = std::env::temp_dir().join("ctp_lib_check");
     
     // 检查行情库
-    let md_dynlib_path = std::env::current_dir()
-        .unwrap_or_default()
-        .join("lib/macos/6.7.7/product/thostmduserapi_se.framework/thostmduserapi_se");
-    
     let _md_api = MdApi::create_api(
-        md_dynlib_path,
+        md_path,
         temp_flow_path.to_str().unwrap_or("/tmp/ctp_check"),
         false,
         false,
@@ -159,12 +147,8 @@ pub fn check_ctp_libraries() -> Result<(), CtpError> {
     tracing::info!("行情库检查通过");
     
     // 检查交易库
-    let td_dynlib_path = std::env::current_dir()
-        .unwrap_or_default()
-        .join("lib/macos/6.7.7/product/thosttraderapi_se.framework/thosttraderapi_se");
-    
     let _trader_api = TraderApi::create_api(
-        td_dynlib_path,
+        td_path,
         temp_flow_path.to_str().unwrap_or("/tmp/ctp_check"),
     );
     tracing::info!("交易库检查通过");

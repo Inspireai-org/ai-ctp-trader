@@ -2,7 +2,9 @@ use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
 
 mod mdapi;
+mod tdapi_order;
 use mdapi::*;
+use tdapi_order::*;
 
 #[derive(Debug, Clone, ValueEnum)]
 pub enum Environment {
@@ -12,7 +14,23 @@ pub enum Environment {
     Tts,
 }
 
-#[derive(Debug, Clone)]
+impl Clone for CtpConfig {
+    fn clone(&self) -> Self {
+        Self {
+            broker_id: self.broker_id.clone(),
+            user_id: self.user_id.clone(),
+            password: self.password.clone(),
+            app_id: self.app_id.clone(),
+            auth_code: self.auth_code.clone(),
+            md_front_address: self.md_front_address.clone(),
+            md_dynlib_path: self.md_dynlib_path.clone(),
+            td_front_address: self.td_front_address.clone(),
+            td_dynlib_path: self.td_dynlib_path.clone(),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct CtpConfig {
     // 通用配置
     pub broker_id: String,
@@ -51,12 +69,12 @@ struct Args {
 }
 
 fn create_config(env: Environment, args: Args) -> CtpConfig {
-    // 使用提供的动态库路径
+    // 使用正确的动态库路径
     #[cfg(target_os = "macos")]
-    let md_dynlib_path = PathBuf::from("../inspirai-trader/lib/macos/TraderapiMduserapi_6.7.7_CP_MacOS/thostmduserapi_se.framework/thostmduserapi_se");
+    let md_dynlib_path = PathBuf::from("../inspirai-trader/src-tauri/lib/macos/6.7.7/cepin/thostmduserapi_se.framework/thostmduserapi_se");
     
     #[cfg(target_os = "macos")]
-    let td_dynlib_path = PathBuf::from("../inspirai-trader/lib/macos/TraderapiMduserapi_6.7.7_CP_MacOS/thosttraderapi_se.framework/thosttraderapi_se");
+    let td_dynlib_path = PathBuf::from("../inspirai-trader/src-tauri/lib/macos/6.7.7/cepin/thosttraderapi_se.framework/thosttraderapi_se");
 
     #[cfg(not(target_os = "macos"))]
     compile_error!("此示例仅支持 macOS 平台");
@@ -75,7 +93,7 @@ fn create_config(env: Environment, args: Args) -> CtpConfig {
                     std::process::exit(1);
                 }),
                 app_id: "inspirai_strategy_1.0.0".to_string(),
-                auth_code: "0000000000000000".to_string(),
+                auth_code: "QHFK5E2GLEUB9XHV".to_string(),
                 md_front_address: "tcp://58.62.16.148:41214".to_string(), // SimNow 第一套
                 td_front_address: "tcp://58.62.16.148:41206".to_string(),
                 md_dynlib_path,
@@ -122,6 +140,14 @@ fn main() {
     println!("行情前置: {}", config.md_front_address);
     println!("----------------------------------------\n");
 
-    // 仅运行行情接口
+    // 同时运行行情和交易接口（包含下单测试）
+    let config_td = config.clone();
+    
+    // 启动交易线程
+    std::thread::spawn(move || {
+        run_td_order(config_td);
+    });
+    
+    // 启动行情线程
     run_md(config);
 }

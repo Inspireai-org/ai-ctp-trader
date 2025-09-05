@@ -27,12 +27,9 @@ fn setup_ctp_libraries() {
     // 获取 CTP 库路径
     let ctp_lib_path = env::var("CTP_LIB_PATH")
         .unwrap_or_else(|_| {
-            // 获取项目根目录的绝对路径
+            // 获取 src-tauri 目录的绝对路径
             let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-            let base_path = PathBuf::from(manifest_dir)
-                .parent()
-                .unwrap()
-                .to_path_buf();
+            let base_path = PathBuf::from(manifest_dir);
             
             // 默认库路径
             if cfg!(target_os = "windows") {
@@ -40,7 +37,7 @@ fn setup_ctp_libraries() {
             } else if cfg!(target_os = "linux") {
                 base_path.join("lib/linux").to_str().unwrap().to_string()
             } else if cfg!(target_os = "macos") {
-                base_path.join("lib/macos/6.7.7/product").to_str().unwrap().to_string()
+                base_path.join("lib/macos/6.7.7/cepin").to_str().unwrap().to_string()
             } else {
                 base_path.join("lib").to_str().unwrap().to_string()
             }

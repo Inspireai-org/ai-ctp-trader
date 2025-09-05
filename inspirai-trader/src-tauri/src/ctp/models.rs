@@ -5,6 +5,7 @@ use chrono::{DateTime, Utc};
 
 /// 登录响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LoginResponse {
     pub trading_day: String,
     pub login_time: String,
@@ -286,6 +287,7 @@ pub struct AccountInfo {
 
 /// 登录凭据
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LoginCredentials {
     pub broker_id: String,
     pub user_id: String,

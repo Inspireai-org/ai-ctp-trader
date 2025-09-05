@@ -80,9 +80,12 @@ impl CtpClient {
         // 初始化 CTP API 管理器，使用 ctp2rs 官方 API
         let mut api_manager = CtpApiManager::new()?;
         
-        // 创建 API 实例
-        api_manager.create_md_api(&self.config.flow_path)?;
-        api_manager.create_trader_api(&self.config.flow_path)?;
+        // 创建 API 实例，使用配置中的动态库路径
+        let md_dynlib_path = self.config.get_md_dynlib_path()?;
+        let td_dynlib_path = self.config.get_td_dynlib_path()?;
+        
+        api_manager.create_md_api(&self.config.flow_path, md_dynlib_path)?;
+        api_manager.create_trader_api(&self.config.flow_path, td_dynlib_path)?;
         
         // 创建并注册 SPI 实例
         self.setup_spi_callbacks(&mut api_manager)?;

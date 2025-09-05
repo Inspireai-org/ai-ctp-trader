@@ -36,8 +36,32 @@ async fn ctp_create_config() -> Result<ctp::CtpConfig, String> {
 #[tauri::command]
 async fn ctp_connect(
     state: State<'_, AppState>,
-    config: ctp::CtpConfig,
+    mut config: ctp::CtpConfig,
 ) -> Result<String, String> {
+    // 自动检测并设置动态库路径（如果未设置）
+    if config.md_dynlib_path.is_none() || config.td_dynlib_path.is_none() {
+        tracing::info!("自动检测 CTP 动态库路径...");
+        if let Err(e) = config.auto_detect_dynlib_paths() {
+            tracing::warn!("自动检测动态库路径失败，尝试使用默认配置: {}", e);
+            // 使用默认的 cepin 库路径
+            config.md_dynlib_path = Some(std::path::PathBuf::from("lib/macos/6.7.7/cepin/thostmduserapi_se.framework/thostmduserapi_se"));
+            config.td_dynlib_path = Some(std::path::PathBuf::from("lib/macos/6.7.7/cepin/thosttraderapi_se.framework/thosttraderapi_se"));
+        }
+    }
+    
+    // 验证库路径是否存在
+    if let Some(md_path) = &config.md_dynlib_path {
+        if !md_path.exists() {
+            return Err(format!("行情动态库文件不存在: {:?}", md_path));
+        }
+    }
+    
+    if let Some(td_path) = &config.td_dynlib_path {
+        if !td_path.exists() {
+            return Err(format!("交易动态库文件不存在: {:?}", td_path));
+        }
+    }
+    
     // 创建新的客户端
     match ctp::CtpClient::new(config.clone()).await {
         Ok(mut new_client) => {

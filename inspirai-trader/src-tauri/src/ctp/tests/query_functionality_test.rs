@@ -183,7 +183,7 @@ mod tests {
 
     fn create_test_config() -> CtpConfig {
         CtpConfig::for_environment(
-            Environment::Sim,
+            Environment::SimNow,
             "test_user".to_string(),
             "test_password".to_string(),
         )
@@ -273,7 +273,7 @@ mod integration_tests {
         
         // 创建配置
         let config = CtpConfig::for_environment(
-            Environment::Sim,
+            Environment::SimNow,
             user_id,
             password,
         );
