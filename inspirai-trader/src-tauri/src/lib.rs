@@ -1,5 +1,7 @@
 // CTP 交易组件模块
 pub mod ctp;
+// 新的高级日志系统模块
+pub mod logging;
 
 use std::sync::Arc;
 use tauri::State;
@@ -168,10 +170,79 @@ async fn ctp_disconnect(state: State<'_, AppState>) -> Result<String, String> {
     }
 }
 
+// 日志系统相关命令
+
+/// 查询日志
+#[tauri::command]
+async fn query_logs(
+    query: logging::LogQuery,
+) -> Result<logging::QueryResult, String> {
+    let system = logging::LoggingSystem::instance()
+        .map_err(|e| format!("获取日志系统失败: {}", e))?;
+    
+    // 创建查询引擎
+    let config = logging::LogConfig::development(); // TODO: 从配置获取
+    let query_engine = logging::LogQueryEngine::new(config)
+        .map_err(|e| format!("创建查询引擎失败: {}", e))?;
+    
+    query_engine.query(query).await
+        .map_err(|e| format!("查询日志失败: {}", e))
+}
+
+/// 获取日志系统指标
+#[tauri::command]
+async fn get_log_metrics() -> Result<logging::MetricsSnapshot, String> {
+    let system = logging::LoggingSystem::instance()
+        .map_err(|e| format!("获取日志系统失败: {}", e))?;
+    
+    let metrics = system.get_metrics();
+    let snapshot = metrics.lock().await.snapshot();
+    Ok(snapshot)
+}
+
+/// 获取日志系统状态
+#[tauri::command]
+async fn get_log_system_status() -> Result<serde_json::Value, String> {
+    match logging::LoggingSystem::instance() {
+        Ok(system) => {
+            let metrics = system.get_metrics();
+            let metrics = metrics.lock().await;
+            Ok(serde_json::json!({
+                "status": "running",
+                "total_logs": metrics.logs_written_total,
+                "success_rate": metrics.get_success_rate(),
+                "average_latency_ms": metrics.get_average_latency_ms(),
+                "queue_size": metrics.queue_size
+            }))
+        }
+        Err(_) => {
+            Ok(serde_json::json!({
+                "status": "not_initialized",
+                "message": "日志系统未初始化"
+            }))
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // 初始化日志系统
-    tracing_subscriber::fmt::init();
+    // 初始化新的高级日志系统
+    let rt = tokio::runtime::Runtime::new().expect("创建 tokio 运行时失败");
+    rt.block_on(async {
+        // 根据环境初始化日志系统
+        let env = std::env::var("CTP_ENV")
+            .unwrap_or_else(|_| "simnow".to_string())
+            .parse::<ctp::config::Environment>()
+            .unwrap_or(ctp::config::Environment::SimNow);
+            
+        if let Err(e) = logging::init_logging(env).await {
+            eprintln!("日志系统初始化失败: {}", e);
+            // 回退到简单的日志系统
+            tracing_subscriber::fmt::init();
+        } else {
+            tracing::info!("高级日志系统初始化成功");
+        }
+    });
     
     // 创建应用状态
     let app_state = AppState {
@@ -192,16 +263,45 @@ pub fn run() {
             ctp_subscribe,
             ctp_unsubscribe,
             ctp_get_status,
-            ctp_disconnect
+            ctp_disconnect,
+            query_logs,
+            get_log_metrics,
+            get_log_system_status
         ])
         .setup(|_app| {
             // 应用启动时初始化 CTP 组件
             tracing::info!("启动 Inspirai Trader 应用");
             
+            // 记录应用启动日志
+            crate::log_performance!("app_startup_time", 0.0, "ms");
+            
             // 启动事件处理任务
             tauri::async_runtime::spawn(async move {
                 // 这里将来会处理从 CTP 接收的事件并发送到前端
                 tracing::info!("事件处理任务已启动");
+                
+                // 定期记录系统状态
+                let mut interval = tokio::time::interval(std::time::Duration::from_secs(30));
+                loop {
+                    interval.tick().await;
+                    
+                    if let Ok(system) = logging::LoggingSystem::instance() {
+                        let metrics = system.get_metrics();
+                        let metrics = metrics.lock().await;
+                        crate::log_performance!(
+                            "system_log_throughput",
+                            metrics.logs_written_total as f64,
+                            "logs"
+                        );
+                        
+                        tracing::debug!(
+                            total_logs = metrics.logs_written_total,
+                            queue_size = metrics.queue_size,
+                            success_rate = metrics.get_success_rate(),
+                            "日志系统状态"
+                        );
+                    }
+                }
             });
             
             Ok(())

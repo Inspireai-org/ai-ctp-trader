@@ -36,7 +36,14 @@ chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2.0"
 anyhow = "1.0"
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json", "time", "local-time"] }
+tracing-appender = "0.2"
+flate2 = "1.0"  # For log compression
+sha2 = "0.10"   # For file checksums
+fs2 = "0.4"     # For file locking
+bytes = "1.0"   # For efficient buffer management
+uuid = { version = "1.0", features = ["v4"] }  # For request IDs
+dirs = "5.0"    # For user data directory detection
 
 libc = "0.2"      # 用于 FFI 操作
 libloading = "0.8" # 用于动态库加载
@@ -44,6 +51,7 @@ toml = "0.8"      # 用于配置文件解析
 clap = { version = "4", features = ["derive"] } # 用于命令行参数解析
 ctp2rs = { version = "0.1.7", features = ["ctp_v6_7_7"] }
 rand = "0.8"      # 用于生成随机数
+regex = "1.11.2"
 
 [dev-dependencies]
 tempfile = "3.0"

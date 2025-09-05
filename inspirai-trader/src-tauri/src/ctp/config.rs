@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::Duration;
+use std::str::FromStr;
 use clap::ValueEnum;
 
 /// 环境类型枚举
@@ -29,6 +30,19 @@ impl std::fmt::Display for Environment {
             Environment::SimNow => write!(f, "simnow"),
             Environment::Tts => write!(f, "tts"),
             Environment::Production => write!(f, "production"),
+        }
+    }
+}
+
+impl FromStr for Environment {
+    type Err = String;
+    
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "simnow" | "sim_now" => Ok(Environment::SimNow),
+            "tts" => Ok(Environment::Tts),
+            "production" | "prod" => Ok(Environment::Production),
+            _ => Err(format!("Invalid environment: {}", s)),
         }
     }
 }
