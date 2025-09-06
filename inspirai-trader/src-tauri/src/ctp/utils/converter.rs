@@ -84,9 +84,14 @@ impl DataConverter {
         ctp_order.Direction = Self::direction_to_ctp_char(order.direction);
         ctp_order.CombOffsetFlag[0] = Self::offset_flag_to_ctp_char(order.offset_flag);
         ctp_order.LimitPrice = order.price;
-        ctp_order.VolumeTotalOriginal = order.volume;
+        ctp_order.VolumeTotalOriginal = order.volume as i32;
         ctp_order.OrderPriceType = Self::order_type_to_ctp_char(order.order_type);
-        ctp_order.TimeCondition = Self::time_condition_to_ctp_char(order.time_condition);
+        // 转换 OrderTimeCondition 到 CTP char
+        ctp_order.TimeCondition = match order.time_condition {
+            crate::ctp::models::OrderTimeCondition::IOC => '1' as i8,
+            crate::ctp::models::OrderTimeCondition::GFD => '3' as i8,
+            _ => '3' as i8, // 默认为当日有效
+        };
         
         // 其他必要字段
         ctp_order.CombHedgeFlag[0] = '1' as i8; // 投机
@@ -123,26 +128,41 @@ impl DataConverter {
     /// 将 CTP 订单状态转换为业务模型
     /// 使用 ctp2rs 官方字符串转换工具
     pub fn convert_order_status(ctp_order: &CThostFtdcOrderField) -> Result<OrderStatus, CtpError> {
+        let order_ref = gb18030_cstr_i8_to_str(&ctp_order.OrderRef)
+            .map_err(|e| CtpError::ConversionError(format!("订单号转换失败: {}", e)))?.to_string();
+        let order_sys_id = gb18030_cstr_i8_to_str(&ctp_order.OrderSysID)
+            .unwrap_or_default().to_string();
+        
         Ok(OrderStatus {
-            order_id: gb18030_cstr_i8_to_str(&ctp_order.OrderRef)
-                .map_err(|e| CtpError::ConversionError(format!("订单号转换失败: {}", e)))?.to_string(),
+            order_ref: order_ref.clone(),
+            order_id: if order_sys_id.is_empty() { order_ref } else { order_sys_id.clone() },
             instrument_id: gb18030_cstr_i8_to_str(&ctp_order.InstrumentID)
                 .map_err(|e| CtpError::ConversionError(format!("合约代码转换失败: {}", e)))?.to_string(),
             direction: Self::ctp_char_to_direction(ctp_order.Direction)?,
             offset_flag: Self::ctp_char_to_offset_flag(ctp_order.CombOffsetFlag[0])?,
+            price: ctp_order.LimitPrice,
             limit_price: ctp_order.LimitPrice,
+            volume: ctp_order.VolumeTotalOriginal as u32,
             volume_total_original: ctp_order.VolumeTotalOriginal,
-            volume_traded: ctp_order.VolumeTraded,
+            volume_traded: ctp_order.VolumeTraded as u32,
+            volume_left: ctp_order.VolumeTotal as u32,
             volume_total: ctp_order.VolumeTotal,
             status: Self::ctp_char_to_order_status(ctp_order.OrderStatus)?,
+            submit_time: chrono::Local::now(), // CTP不提供提交时间，使用当前时间
             insert_time: gb18030_cstr_i8_to_str(&ctp_order.InsertTime)
                 .map_err(|e| CtpError::ConversionError(format!("插入时间转换失败: {}", e)))?.to_string(),
-            update_time: gb18030_cstr_i8_to_str(&ctp_order.UpdateTime)
-                .map_err(|e| CtpError::ConversionError(format!("更新时间转换失败: {}", e)))?.to_string(),
+            update_time: chrono::Local::now(), // 使用当前时间作为更新时间
+            front_id: ctp_order.FrontID,
+            session_id: ctp_order.SessionID,
+            order_sys_id,
             status_msg: gb18030_cstr_i8_to_str(&ctp_order.StatusMsg)
                 .ok()
                 .map(|s| s.to_string())
-                .filter(|s| !s.is_empty()),
+                .filter(|s| !s.is_empty())
+                .unwrap_or_default(),
+            is_local: false,
+            frozen_margin: 0.0,
+            frozen_commission: 0.0,
         })
     }
 
@@ -197,6 +217,7 @@ impl DataConverter {
                 .map_err(|e| CtpError::ConversionError(format!("账户ID转换失败: {}", e)))?.to_string(),
             available: ctp_account.Available,
             balance: ctp_account.Balance,
+            margin: ctp_account.CurrMargin,
             frozen_margin: ctp_account.FrozenMargin,
             frozen_commission: ctp_account.FrozenCommission,
             curr_margin: ctp_account.CurrMargin,

@@ -210,6 +210,9 @@ impl ctp2rs::v1alpha1::TraderSpi for TraderSpiImpl {
                     max_order_ref: max_ref,
                 }
             ));
+            
+            // 登录成功后自动确认结算单
+            self.send_event(CtpEvent::SettlementRequired);
         }
     }
 
@@ -232,18 +235,29 @@ impl ctp2rs::v1alpha1::TraderSpi for TraderSpiImpl {
                     
                     // 创建失败的订单状态
                     let failed_order = OrderStatus {
+                        order_ref: order_ref.clone(),
                         order_id: order_ref.clone(),
                         instrument_id,
                         direction: DataConverter::ctp_char_to_direction(order_field.Direction).unwrap_or(crate::ctp::OrderDirection::Buy),
                         offset_flag: DataConverter::ctp_char_to_offset_flag(order_field.CombOffsetFlag[0]).unwrap_or(crate::ctp::OffsetFlag::Open),
+                        price: order_field.LimitPrice,
                         limit_price: order_field.LimitPrice,
+                        volume: order_field.VolumeTotalOriginal as u32,
                         volume_total_original: order_field.VolumeTotalOriginal,
                         volume_traded: 0,
+                        volume_left: order_field.VolumeTotalOriginal as u32,
                         volume_total: order_field.VolumeTotalOriginal,
                         status: crate::ctp::models::OrderStatusType::Unknown,
+                        submit_time: chrono::Local::now(),
                         insert_time: chrono::Local::now().format("%H:%M:%S").to_string(),
-                        update_time: chrono::Local::now().format("%H:%M:%S").to_string(),
-                        status_msg: Some(msg.clone()),
+                        update_time: chrono::Local::now(),
+                        front_id: self.front_id,
+                        session_id: self.session_id,
+                        order_sys_id: String::new(),
+                        status_msg: msg.clone(),
+                        is_local: false,
+                        frozen_margin: 0.0,
+                        frozen_commission: 0.0,
                     };
                     
                     self.orders.lock().unwrap().insert(order_ref.clone(), failed_order.clone());

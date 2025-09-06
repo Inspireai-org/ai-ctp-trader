@@ -36,6 +36,8 @@ pub enum CtpEvent {
     QueryOrdersResult(Vec<OrderStatus>),
     /// 查询结果 - 结算信息
     QuerySettlementResult(String),
+    /// 需要确认结算单
+    SettlementRequired,
     /// 结算信息确认成功
     SettlementConfirmed,
     /// 错误事件

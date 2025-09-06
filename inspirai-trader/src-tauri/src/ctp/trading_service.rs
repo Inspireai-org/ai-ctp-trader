@@ -142,18 +142,29 @@ impl TradingService {
         
         // 创建订单状态
         let order_status = OrderStatus {
+            order_ref: order_ref.clone(),
             order_id: order_ref.clone(),
             instrument_id: order.instrument_id.clone(),
             direction: order.direction,
             offset_flag: order.offset_flag,
+            price: order.price,
             limit_price: order.price,
-            volume_total_original: order.volume,
+            volume: order.volume as u32,
+            volume_total_original: order.volume as i32,
             volume_traded: 0,
-            volume_total: order.volume,
+            volume_left: order.volume as u32,
+            volume_total: order.volume as i32,
             status: crate::ctp::models::OrderStatusType::Unknown,
+            submit_time: chrono::Local::now(),
             insert_time: chrono::Local::now().format("%H:%M:%S").to_string(),
-            update_time: chrono::Local::now().format("%H:%M:%S").to_string(),
-            status_msg: Some("待提交".to_string()),
+            update_time: chrono::Local::now(),
+            front_id: 0,
+            session_id: 0,
+            order_sys_id: String::new(),
+            status_msg: "待提交".to_string(),
+            is_local: true,
+            frozen_margin: 0.0,
+            frozen_commission: 0.0,
         };
         
         // 添加到订单管理器

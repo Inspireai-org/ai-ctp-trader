@@ -118,5 +118,9 @@ export function getAllPresets(): CtpPreset[] {
  * 开发环境使用广州期货评测环境
  */
 export function getDefaultPreset(): CtpPreset {
-  return CTP_PRESETS.gzqh_test;
+  const preset = CTP_PRESETS.gzqh_test;
+  if (!preset) {
+    throw new Error('默认预设配置不存在');
+  }
+  return preset;
 }

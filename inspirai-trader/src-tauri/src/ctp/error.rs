@@ -36,11 +36,20 @@ pub enum CtpError {
     #[error("验证错误: {0}")]
     ValidationError(String),
     
+    #[error("参数无效: {0}")]
+    InvalidParameter(String),
+    
     #[error("未找到: {0}")]
     NotFound(String),
     
     #[error("未实现: {0}")]
     NotImplemented(String),
+    
+    #[error("风险控制: {0}")]
+    RiskControl(String),
+    
+    #[error("限流: {0}")]
+    RateLimit(String),
     
     #[error("未知错误: {0}")]
     Unknown(String),
@@ -100,8 +109,11 @@ impl CtpError {
             CtpError::LibraryLoadError(_) => "LIBRARY_LOAD_ERROR",
             CtpError::StateError(_) => "STATE_ERROR",
             CtpError::ValidationError(_) => "VALIDATION_ERROR",
+            CtpError::InvalidParameter(_) => "INVALID_PARAMETER",
             CtpError::NotFound(_) => "NOT_FOUND",
             CtpError::NotImplemented(_) => "NOT_IMPLEMENTED",
+            CtpError::RiskControl(_) => "RISK_CONTROL",
+            CtpError::RateLimit(_) => "RATE_LIMIT",
             CtpError::Unknown(_) => "UNKNOWN_ERROR",
         }
     }
