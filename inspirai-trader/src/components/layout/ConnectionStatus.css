@@ -1,0 +1,18 @@
+.connection-status {
+  padding: 8px 16px;
+  background: #141414;
+  border-bottom: 1px solid #2b2b2b;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.connection-status .status-text {
+  color: #ddd;
+  margin-right: 12px;
+}
+
+.connection-status .user-id {
+  color: #1890ff;
+  font-weight: 500;
+}

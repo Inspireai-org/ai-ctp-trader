@@ -1,0 +1,87 @@
+.account-panel .ant-card {
+  background: #1a1a1a;
+  border-radius: 8px;
+  border: 1px solid #2b2b2b;
+}
+
+.account-panel .ant-card-head {
+  background: #141414;
+  border-bottom: 1px solid #2b2b2b;
+  color: #ddd;
+}
+
+.account-panel .ant-statistic-title {
+  color: #999;
+}
+
+.account-panel .ant-statistic-content {
+  color: #ddd;
+}
+
+.risk-indicator {
+  margin-bottom: 16px;
+}
+
+.risk-indicator .risk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  color: #ddd;
+}
+
+.risk-indicator .ant-progress-text {
+  color: #ddd !important;
+}
+
+.risk-tips {
+  padding: 12px;
+  background: #141414;
+  border-radius: 4px;
+}
+
+.risk-tips .tip-item {
+  display: flex;
+  align-items: center;
+  color: #999;
+  font-size: 13px;
+}
+
+.fund-detail-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #141414;
+  border-radius: 4px;
+}
+
+.fund-detail-item .label {
+  color: #999;
+  font-size: 13px;
+}
+
+.fund-detail-item .value {
+  color: #ddd;
+  font-weight: 500;
+}
+
+.fund-detail-item .value.negative {
+  color: #52c41a;
+}
+
+.account-panel .ant-divider {
+  border-color: #2b2b2b;
+}
+
+.account-panel .ant-alert {
+  background: rgba(245, 34, 45, 0.1);
+  border: 1px solid rgba(245, 34, 45, 0.3);
+}
+
+.account-panel .ant-alert-message {
+  color: #ff6b6b;
+}
+
+.account-panel .ant-alert-description {
+  color: #ff9999;
+}

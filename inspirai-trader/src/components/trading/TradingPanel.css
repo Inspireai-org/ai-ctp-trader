@@ -1,0 +1,108 @@
+.trading-panel {
+  background: #1a1a1a;
+  border-radius: 8px;
+}
+
+.trading-panel .ant-card-head {
+  background: #141414;
+  border-bottom: 1px solid #2b2b2b;
+  color: #ddd;
+}
+
+.trading-panel .ant-form-item-label > label {
+  color: #999;
+}
+
+.trading-panel .ant-input-number,
+.trading-panel .ant-select-selector {
+  background: #2b2b2b !important;
+  border-color: #3b3b3b !important;
+  color: #ddd !important;
+}
+
+.trading-panel .ant-input-number-input {
+  background: transparent;
+  color: #ddd;
+}
+
+.trading-panel .ant-radio-group-solid .ant-radio-button-wrapper {
+  background: #2b2b2b;
+  border-color: #3b3b3b;
+  color: #999;
+}
+
+.trading-panel .ant-radio-group-solid .ant-radio-button-wrapper-checked.buy-button {
+  background: #f44336 !important;
+  border-color: #f44336 !important;
+  color: #fff !important;
+}
+
+.trading-panel .ant-radio-group-solid .ant-radio-button-wrapper-checked.sell-button {
+  background: #4caf50 !important;
+  border-color: #4caf50 !important;
+  color: #fff !important;
+}
+
+.trading-panel .submit-buy {
+  background: #f44336;
+  border-color: #f44336;
+}
+
+.trading-panel .submit-buy:hover {
+  background: #d32f2f;
+  border-color: #d32f2f;
+}
+
+.trading-panel .submit-sell {
+  background: #4caf50;
+  border-color: #4caf50;
+}
+
+.trading-panel .submit-sell:hover {
+  background: #388e3c;
+  border-color: #388e3c;
+}
+
+.fee-estimate {
+  background: #141414;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.fee-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.fee-item:last-child {
+  margin-bottom: 0;
+}
+
+.order-confirm-content .confirm-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.trading-panel .ant-tabs-tab {
+  color: #999;
+}
+
+.trading-panel .ant-tabs-tab-active {
+  color: #1890ff;
+}
+
+.trading-panel .ant-tabs-ink-bar {
+  background: #1890ff;
+}
+
+.trading-panel .ant-tabs-nav {
+  background: #141414;
+  margin-bottom: 16px;
+}
+
+.trading-panel .ant-tabs-content {
+  color: #ddd;
+}

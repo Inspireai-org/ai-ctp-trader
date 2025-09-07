@@ -524,7 +524,7 @@ impl CtpClient {
     }
 
     /// 查询账户信息
-    pub async fn query_account(&mut self) -> Result<(), CtpError> {
+    pub async fn query_account(&mut self) -> Result<AccountInfo, CtpError> {
         if !matches!(self.get_state(), ClientState::LoggedIn) {
             return Err(CtpError::AuthenticationError("用户未登录".to_string()));
         }
@@ -557,7 +557,21 @@ impl CtpClient {
                 }
                 
                 tracing::info!("资金账户查询请求已发送，结果将通过事件回调返回");
-                Ok(())
+                
+                // 模拟返回账户信息（实际应该从事件回调中获取）
+                Ok(AccountInfo {
+                    account_id: self.config.investor_id.clone(),
+                    available: 100000.0,
+                    balance: 100000.0,
+                    margin: 0.0,
+                    frozen_margin: 0.0,
+                    frozen_commission: 0.0,
+                    curr_margin: 0.0,
+                    commission: 0.0,
+                    close_profit: 0.0,
+                    position_profit: 0.0,
+                    risk_ratio: 0.0,
+                })
             } else {
                 Err(CtpError::StateError("交易 API 未初始化".to_string()))
             }
@@ -567,7 +581,7 @@ impl CtpClient {
     }
 
     /// 查询持仓信息
-    pub async fn query_positions(&mut self) -> Result<(), CtpError> {
+    pub async fn query_positions(&mut self) -> Result<Vec<Position>, CtpError> {
         if !matches!(self.get_state(), ClientState::LoggedIn) {
             return Err(CtpError::AuthenticationError("用户未登录".to_string()));
         }
@@ -601,7 +615,9 @@ impl CtpClient {
                 }
                 
                 tracing::info!("投资者持仓查询请求已发送，结果将通过事件回调返回");
-                Ok(())
+                
+                // 模拟返回持仓信息（实际应该从事件回调中获取）
+                Ok(vec![])
             } else {
                 Err(CtpError::StateError("交易 API 未初始化".to_string()))
             }
@@ -812,7 +828,7 @@ impl CtpClient {
     }
 
     /// 查询成交记录
-    pub async fn query_trades(&mut self, instrument_id: Option<&str>) -> Result<(), CtpError> {
+    pub async fn query_trades(&mut self, instrument_id: Option<&str>) -> Result<Vec<Trade>, CtpError> {
         if !matches!(self.get_state(), ClientState::LoggedIn) {
             return Err(CtpError::AuthenticationError("用户未登录".to_string()));
         }
@@ -850,7 +866,9 @@ impl CtpClient {
                 }
                 
                 tracing::info!("成交查询请求已发送，结果将通过事件回调返回");
-                Ok(())
+                
+                // 模拟返回成交记录（实际应该从事件回调中获取）
+                Ok(vec![])
             } else {
                 Err(CtpError::StateError("交易 API 未初始化".to_string()))
             }
@@ -860,7 +878,7 @@ impl CtpClient {
     }
 
     /// 查询报单记录
-    pub async fn query_orders(&mut self, instrument_id: Option<&str>) -> Result<(), CtpError> {
+    pub async fn query_orders(&mut self, instrument_id: Option<&str>) -> Result<Vec<OrderStatus>, CtpError> {
         if !matches!(self.get_state(), ClientState::LoggedIn) {
             return Err(CtpError::AuthenticationError("用户未登录".to_string()));
         }
@@ -898,7 +916,9 @@ impl CtpClient {
                 }
                 
                 tracing::info!("报单查询请求已发送，结果将通过事件回调返回");
-                Ok(())
+                
+                // 模拟返回订单记录（实际应该从事件回调中获取）
+                Ok(vec![])
             } else {
                 Err(CtpError::StateError("交易 API 未初始化".to_string()))
             }
@@ -1047,6 +1067,229 @@ impl CtpClient {
         );
         self.set_state(ClientState::Error(error.to_string()));
         Err(error)
+    }
+
+    /// 下单
+    pub async fn place_order(&mut self, order: OrderInput) -> Result<OrderRef, CtpError> {
+        if !matches!(self.get_state(), ClientState::LoggedIn) {
+            return Err(CtpError::AuthenticationError("用户未登录".to_string()));
+        }
+        
+        let order_ref = self.generate_order_ref();
+        let front_id = 1; // 应该从登录响应中获取
+        let session_id = 1; // 应该从登录响应中获取
+        
+        // 创建订单请求
+        let order_request = OrderRequest {
+            instrument_id: order.instrument_id.clone(),
+            order_ref: order_ref.clone(),
+            direction: match order.direction.as_str() {
+                "Buy" => OrderDirection::Buy,
+                "Sell" => OrderDirection::Sell,
+                _ => return Err(CtpError::ValidationError("无效的买卖方向".to_string())),
+            },
+            offset_flag: match order.offset.as_str() {
+                "Open" => OffsetFlag::Open,
+                "Close" => OffsetFlag::Close,
+                "CloseToday" => OffsetFlag::CloseToday,
+                "CloseYesterday" => OffsetFlag::CloseYesterday,
+                _ => return Err(CtpError::ValidationError("无效的开平标志".to_string())),
+            },
+            price: order.price,
+            volume: order.volume,
+            order_type: match order.order_type.as_str() {
+                "Limit" => OrderType::Limit,
+                "Market" => OrderType::Market,
+                _ => OrderType::Limit,
+            },
+            price_type: match order.order_type.as_str() {
+                "Market" => OrderPriceType::Market,
+                _ => OrderPriceType::Limit,
+            },
+            time_condition: match order.time_condition.as_str() {
+                "IOC" => OrderTimeCondition::IOC,
+                "GFS" => OrderTimeCondition::GFS,
+                "GFD" => OrderTimeCondition::GFD,
+                _ => OrderTimeCondition::GFD,
+            },
+            volume_condition: match order.volume_condition.as_str() {
+                "Any" => OrderVolumeCondition::Any,
+                "Min" => OrderVolumeCondition::Min,
+                "All" => OrderVolumeCondition::All,
+                _ => OrderVolumeCondition::Any,
+            },
+            min_volume: order.min_volume,
+            contingent_condition: match order.contingent_condition.as_str() {
+                "Touch" => OrderContingentCondition::Touch,
+                "TouchProfit" => OrderContingentCondition::TouchProfit,
+                _ => OrderContingentCondition::Immediately,
+            },
+            stop_price: order.stop_price,
+            force_close_reason: match order.force_close_reason.as_str() {
+                "LackDeposit" => OrderForceCloseReason::LackDeposit,
+                _ => OrderForceCloseReason::NotForceClose,
+            },
+            is_auto_suspend: order.is_auto_suspend,
+        };
+        
+        // 提交订单
+        let _ = self.submit_order(order_request).await?;
+        
+        Ok(OrderRef {
+            order_ref,
+            front_id,
+            session_id,
+        })
+    }
+
+    /// 查询合约信息
+    pub async fn query_instruments(&mut self) -> Result<Vec<InstrumentInfo>, CtpError> {
+        if !matches!(self.get_state(), ClientState::LoggedIn) {
+            return Err(CtpError::AuthenticationError("用户未登录".to_string()));
+        }
+        
+        // 模拟返回一些合约信息
+        Ok(vec![
+            InstrumentInfo {
+                instrument_id: "IF2401".to_string(),
+                exchange_id: "CFFEX".to_string(),
+                instrument_name: "沪深300股指期货2401".to_string(),
+                product_id: "IF".to_string(),
+                product_class: "Futures".to_string(),
+                delivery_year: 2024,
+                delivery_month: 1,
+                max_market_order_volume: 100,
+                min_market_order_volume: 1,
+                max_limit_order_volume: 500,
+                min_limit_order_volume: 1,
+                volume_multiple: 300,
+                price_tick: 0.2,
+                create_date: "20231201".to_string(),
+                open_date: "20231201".to_string(),
+                expire_date: "20240119".to_string(),
+                start_delivery_date: "20240119".to_string(),
+                end_delivery_date: "20240119".to_string(),
+                is_trading: true,
+                underlying_instrument: "000300".to_string(),
+                strike_price: 0.0,
+                underlying_multiple: 1.0,
+                long_margin_ratio: 0.12,
+                short_margin_ratio: 0.12,
+            },
+        ])
+    }
+
+    /// 查询手续费率
+    pub async fn query_commission_rate(&mut self, instrument_id: &str) -> Result<CommissionRate, CtpError> {
+        if !matches!(self.get_state(), ClientState::LoggedIn) {
+            return Err(CtpError::AuthenticationError("用户未登录".to_string()));
+        }
+        
+        // 模拟返回手续费率
+        Ok(CommissionRate {
+            instrument_id: instrument_id.to_string(),
+            open_ratio_by_money: 0.000023,
+            open_ratio_by_volume: 0.0,
+            close_ratio_by_money: 0.000023,
+            close_ratio_by_volume: 0.0,
+            close_today_ratio_by_money: 0.00023,
+            close_today_ratio_by_volume: 0.0,
+        })
+    }
+
+    /// 查询保证金率
+    pub async fn query_margin_rate(&mut self, instrument_id: &str) -> Result<MarginRate, CtpError> {
+        if !matches!(self.get_state(), ClientState::LoggedIn) {
+            return Err(CtpError::AuthenticationError("用户未登录".to_string()));
+        }
+        
+        // 模拟返回保证金率
+        Ok(MarginRate {
+            instrument_id: instrument_id.to_string(),
+            long_margin_ratio_by_money: 0.12,
+            long_margin_ratio_by_volume: 0.0,
+            short_margin_ratio_by_money: 0.12,
+            short_margin_ratio_by_volume: 0.0,
+        })
+    }
+
+    /// 获取市场数据
+    pub async fn get_market_data(&mut self, instrument_id: &str) -> Result<MarketData, CtpError> {
+        if !matches!(self.get_state(), ClientState::LoggedIn) {
+            return Err(CtpError::AuthenticationError("用户未登录".to_string()));
+        }
+        
+        // 模拟返回市场数据
+        Ok(MarketData {
+            instrument_id: instrument_id.to_string(),
+            exchange_id: "CFFEX".to_string(),
+            last_price: 3800.0,
+            pre_settlement_price: 3790.0,
+            pre_close_price: 3795.0,
+            pre_open_interest: 150000.0,
+            open_price: 3798.0,
+            highest_price: 3810.0,
+            lowest_price: 3780.0,
+            volume: 50000,
+            turnover: 1900000000.0,
+            open_interest: 145000.0,
+            close_price: 0.0,
+            settlement_price: 0.0,
+            upper_limit_price: 4174.0,
+            lower_limit_price: 3406.0,
+            bid_price: 3799.8,
+            bid_volume: 50,
+            ask_price: 3800.2,
+            ask_volume: 45,
+            average_price: 3800.0,
+            update_time: chrono::Local::now().format("%H:%M:%S").to_string(),
+            update_millisec: 500,
+            trading_day: chrono::Local::now().format("%Y%m%d").to_string(),
+        })
+    }
+
+    /// 获取所有市场数据
+    pub async fn get_all_market_data(&mut self) -> Result<Vec<MarketData>, CtpError> {
+        if !matches!(self.get_state(), ClientState::LoggedIn) {
+            return Err(CtpError::AuthenticationError("用户未登录".to_string()));
+        }
+        
+        // 获取所有已订阅合约的市场数据
+        let instruments = self.get_subscribed_instruments();
+        let mut market_data_list = Vec::new();
+        
+        for instrument_id in instruments {
+            if let Ok(data) = self.get_market_data(&instrument_id).await {
+                market_data_list.push(data);
+            }
+        }
+        
+        Ok(market_data_list)
+    }
+
+    /// 设置风险参数
+    pub async fn set_risk_params(&mut self, params: RiskParams) -> Result<(), CtpError> {
+        if !matches!(self.get_state(), ClientState::LoggedIn) {
+            return Err(CtpError::AuthenticationError("用户未登录".to_string()));
+        }
+        
+        // 验证风险参数
+        if params.max_position_ratio < 0.0 || params.max_position_ratio > 1.0 {
+            return Err(CtpError::ValidationError("持仓比例必须在0到1之间".to_string()));
+        }
+        
+        if params.max_single_loss < 0.0 {
+            return Err(CtpError::ValidationError("单笔最大损失不能为负".to_string()));
+        }
+        
+        if params.max_daily_loss < 0.0 {
+            return Err(CtpError::ValidationError("日最大损失不能为负".to_string()));
+        }
+        
+        // 保存风险参数（实际应该保存到某个地方）
+        tracing::info!("设置风险参数: {:?}", params);
+        
+        Ok(())
     }
 
     /// 处理认证失败重试

@@ -1,0 +1,133 @@
+.settings-panel {
+  background: #1a1a1a;
+  border-radius: 8px;
+}
+
+.settings-panel .ant-card-head {
+  background: #141414;
+  border-bottom: 1px solid #2b2b2b;
+  color: #ddd;
+}
+
+.settings-panel .ant-tabs-nav {
+  background: transparent;
+}
+
+.settings-panel .ant-tabs-tab {
+  color: #999;
+}
+
+.settings-panel .ant-tabs-tab-active {
+  color: #1890ff;
+}
+
+.settings-panel .ant-tabs-ink-bar {
+  background: #1890ff;
+}
+
+.settings-panel .ant-form-item-label > label {
+  color: #999;
+}
+
+.settings-panel .ant-input,
+.settings-panel .ant-input-number,
+.settings-panel .ant-select-selector {
+  background: #2b2b2b !important;
+  border-color: #3b3b3b !important;
+  color: #ddd !important;
+}
+
+.settings-panel .ant-input-number-input {
+  background: transparent;
+  color: #ddd;
+}
+
+.settings-panel .ant-radio-group-solid .ant-radio-button-wrapper {
+  background: #2b2b2b;
+  border-color: #3b3b3b;
+  color: #999;
+}
+
+.settings-panel .ant-radio-group-solid .ant-radio-button-wrapper-checked {
+  background: #1890ff;
+  border-color: #1890ff;
+  color: #fff;
+}
+
+.settings-panel .ant-slider {
+  margin: 16px 0;
+}
+
+.settings-panel .ant-slider-rail {
+  background: #2b2b2b;
+}
+
+.settings-panel .ant-slider-track {
+  background: #1890ff;
+}
+
+.settings-panel .ant-slider-handle {
+  border-color: #1890ff;
+}
+
+.settings-panel .ant-slider-mark-text {
+  color: #666;
+}
+
+.color-picker {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.3s;
+}
+
+.color-picker:hover {
+  border-color: #1890ff;
+  transform: scale(1.1);
+}
+
+.settings-panel .ant-switch {
+  background: #2b2b2b;
+}
+
+.settings-panel .ant-switch-checked {
+  background: #1890ff;
+}
+
+.settings-panel .ant-divider {
+  border-color: #2b2b2b;
+}
+
+.settings-panel .ant-alert {
+  background: rgba(24, 144, 255, 0.1);
+  border: 1px solid rgba(24, 144, 255, 0.3);
+}
+
+.settings-panel .ant-alert-message,
+.settings-panel .ant-alert-description {
+  color: #8db8ff;
+}
+
+.settings-panel .ant-btn {
+  background: transparent;
+  border-color: #3b3b3b;
+  color: #ddd;
+}
+
+.settings-panel .ant-btn:hover {
+  background: #2b2b2b;
+  border-color: #4b4b4b;
+  color: #fff;
+}
+
+.settings-panel .ant-btn-primary {
+  background: #1890ff;
+  border-color: #1890ff;
+}
+
+.settings-panel .ant-btn-primary:hover {
+  background: #40a9ff;
+  border-color: #40a9ff;
+}

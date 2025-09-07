@@ -1,0 +1,132 @@
+.trading-page {
+  min-height: 100vh;
+  background: #0d0d0d;
+}
+
+.trading-page .ant-layout-content {
+  padding: 0;
+}
+
+.trading-tabs {
+  background: #1a1a1a;
+  height: 100vh;
+}
+
+.trading-tabs .ant-tabs-nav {
+  background: #141414;
+  margin: 0;
+  padding: 0 20px;
+}
+
+.trading-tabs .ant-tabs-tab {
+  color: #999;
+  padding: 12px 20px;
+}
+
+.trading-tabs .ant-tabs-tab-active {
+  color: #1890ff;
+}
+
+.trading-tabs .ant-tabs-ink-bar {
+  background: #1890ff;
+}
+
+.trading-tabs .ant-tabs-content {
+  padding: 0;
+  height: calc(100vh - 46px);
+  overflow: auto;
+}
+
+.trading-grid-layout {
+  background: #0d0d0d;
+}
+
+.react-grid-item {
+  background: #1a1a1a;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.react-grid-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: rgba(24, 144, 255, 0.2);
+  border: 2px dashed #1890ff;
+  border-radius: 8px;
+}
+
+.react-resizable-handle {
+  background: none;
+}
+
+.react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 5px;
+  height: 5px;
+  border-right: 2px solid #666;
+  border-bottom: 2px solid #666;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #0d0d0d;
+}
+
+.loading-container .ant-spin-text {
+  color: #999;
+  margin-top: 16px;
+}
+
+/* 自定义滚动条 */
+.trading-page ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.trading-page ::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.trading-page ::-webkit-scrollbar-thumb {
+  background: #3b3b3b;
+  border-radius: 4px;
+}
+
+.trading-page ::-webkit-scrollbar-thumb:hover {
+  background: #4b4b4b;
+}
+
+/* 全屏模态框样式 */
+.ant-modal-wrap {
+  overflow: hidden;
+}
+
+.ant-modal-content {
+  background: #1a1a1a;
+}
+
+.ant-modal-header {
+  background: #141414;
+  border-bottom: 1px solid #2b2b2b;
+}
+
+.ant-modal-title {
+  color: #ddd;
+}
+
+.ant-modal-close-x {
+  color: #999;
+}
+
+.ant-modal-close-x:hover {
+  color: #fff;
+}

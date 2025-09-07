@@ -30,7 +30,9 @@ import { ctpService } from '@/services/tauri';
 import { useMarketDataStore } from '@/stores/marketData';
 import type { CtpConfig } from '@/types';
 import { ConnectionStatus } from '@/types';
-import { CTP_PRESETS, type CtpPreset } from '@/config/ctp-presets';
+import { CTP_PRESETS, type CtpPreset, isWeekend, getRecommendedPreset, getTtsPresets } from '@/config/ctp-presets';
+import { environmentManager } from '@/services/environmentManager';
+import QuickConnectPanel from './QuickConnectPanel';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -51,6 +53,7 @@ const CtpConnectionDialog: React.FC<CtpConnectionDialogProps> = ({
   const [connectionError, setConnectionError] = useState<string>('');
   const [selectedPreset, setSelectedPreset] = useState<CtpPreset | null>(null);
   const [isCustomConfig, setIsCustomConfig] = useState(false);
+  const [isWeekendMode, setIsWeekendMode] = useState(false);
   
   const { setConnectionStatus } = useMarketDataStore();
 
@@ -63,9 +66,13 @@ const CtpConnectionDialog: React.FC<CtpConnectionDialogProps> = ({
       setIsCustomConfig(false);
       form.resetFields();
       
-      // 开发环境默认选择广州期货评测环境
-      const defaultPreset = CTP_PRESETS.gzqh_test;
-      handlePresetSelect(defaultPreset.key);
+      // 检查是否为周末模式
+      const weekendMode = isWeekend();
+      setIsWeekendMode(weekendMode);
+      
+      // 根据周末模式选择推荐环境
+      const recommendedPreset = getRecommendedPreset();
+      handlePresetSelect(recommendedPreset.key);
     }
   }, [visible]);
 
@@ -95,6 +102,14 @@ const CtpConnectionDialog: React.FC<CtpConnectionDialogProps> = ({
     form.setFieldsValue(formValues);
   };
 
+  const handleQuickConnect = async (presetKey: string) => {
+    handlePresetSelect(presetKey);
+    // 等待表单更新后自动连接
+    setTimeout(() => {
+      handleConnect();
+    }, 100);
+  };
+
   const handleConnect = async () => {
     try {
       const values = await form.validateFields();
@@ -106,10 +121,19 @@ const CtpConnectionDialog: React.FC<CtpConnectionDialogProps> = ({
       await ctpService.init();
 
       // 构建完整的连接配置
-      // 对于广州期货评测环境，使用 production 环境配置
-      const actualEnvironment = values.environment === 'gzqh_test' ? 'production' : 
-                               values.environment === 'production_template' ? 'production' : 
-                               values.environment;
+      // 映射前端预设键到后端环境类型
+      const getActualEnvironment = (envKey: string): string => {
+        // TTS 相关环境映射到 'tts'
+        if (envKey.startsWith('tts_')) return 'tts';
+        // SimNow 相关环境映射到 'simnow' 
+        if (envKey.startsWith('simnow') || envKey.includes('openctp')) return 'simnow';
+        // 生产环境映射
+        if (envKey === 'gzqh_test' || envKey === 'production_template') return 'production';
+        // 默认返回 simnow
+        return envKey === 'production' ? 'production' : 'simnow';
+      };
+      
+      const actualEnvironment = getActualEnvironment(values.environment);
       
       const connectionConfig: CtpConfig = {
         environment: actualEnvironment,
@@ -291,6 +315,13 @@ const CtpConnectionDialog: React.FC<CtpConnectionDialogProps> = ({
         >
           {currentStep === 0 && (
             <>
+              <QuickConnectPanel 
+                onQuickConnect={handleQuickConnect}
+                loading={loading}
+              />
+
+              <Divider>或手动选择环境</Divider>
+
               <Form.Item
                 label="选择交易环境"
                 name="environment"
@@ -301,14 +332,48 @@ const CtpConnectionDialog: React.FC<CtpConnectionDialogProps> = ({
                   placeholder="请选择预置的交易环境"
                   onChange={handlePresetSelect}
                 >
-                  {Object.values(CTP_PRESETS).map(preset => (
-                    <Select.Option key={preset.key} value={preset.key}>
-                      <Space>
-                        <EnvironmentOutlined />
-                        <span>{preset.label}</span>
-                      </Space>
-                    </Select.Option>
-                  ))}
+                  {/* TTS 环境分组 */}
+                  {getTtsPresets().length > 0 && (
+                    <Select.OptGroup label="🔧 TTS 测试环境（推荐周末使用）">
+                      {getTtsPresets().map(preset => (
+                        <Select.Option key={preset.key} value={preset.key}>
+                          <Space>
+                            <EnvironmentOutlined />
+                            <span>{preset.label}</span>
+                            {preset.isWeekendAvailable && <Text type="success">周末可用</Text>}
+                          </Space>
+                        </Select.Option>
+                      ))}
+                    </Select.OptGroup>
+                  )}
+                  
+                  {/* 模拟环境分组 */}
+                  <Select.OptGroup label="🏗️ 模拟环境">
+                    {Object.values(CTP_PRESETS)
+                      .filter(preset => preset.category !== 'tts' && preset.category !== 'production')
+                      .map(preset => (
+                        <Select.Option key={preset.key} value={preset.key}>
+                          <Space>
+                            <EnvironmentOutlined />
+                            <span>{preset.label}</span>
+                          </Space>
+                        </Select.Option>
+                      ))}
+                  </Select.OptGroup>
+                  
+                  {/* 生产环境分组 */}
+                  <Select.OptGroup label="⚠️ 生产环境">
+                    {Object.values(CTP_PRESETS)
+                      .filter(preset => preset.category === 'production')
+                      .map(preset => (
+                        <Select.Option key={preset.key} value={preset.key}>
+                          <Space>
+                            <EnvironmentOutlined />
+                            <span>{preset.label}</span>
+                          </Space>
+                        </Select.Option>
+                      ))}
+                  </Select.OptGroup>
                 </Select>
               </Form.Item>
 
@@ -316,8 +381,25 @@ const CtpConnectionDialog: React.FC<CtpConnectionDialogProps> = ({
                 <>
                   <Alert
                     message={selectedPreset.description}
-                    description={selectedPreset.tips}
-                    type="info"
+                    description={
+                      <div>
+                        <div>{selectedPreset.tips}</div>
+                        {selectedPreset.features && selectedPreset.features.length > 0 && (
+                          <div style={{ marginTop: 8 }}>
+                            <Text strong>环境特性：</Text>
+                            <Space wrap style={{ marginLeft: 8 }}>
+                              {selectedPreset.features.map(feature => (
+                                <Text key={feature} code style={{ fontSize: '12px' }}>
+                                  {feature}
+                                </Text>
+                              ))}
+                            </Space>
+                          </div>
+                        )}
+                      </div>
+                    }
+                    type={selectedPreset.category === 'tts' ? 'success' : 
+                          selectedPreset.category === 'production' ? 'warning' : 'info'}
                     showIcon
                     icon={<InfoCircleOutlined />}
                     style={{ marginBottom: 16 }}

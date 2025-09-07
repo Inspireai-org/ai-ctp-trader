@@ -1,0 +1,99 @@
+.position-panel {
+  background: #1a1a1a;
+  border-radius: 8px;
+}
+
+.position-panel .ant-card-head {
+  background: #141414;
+  border-bottom: 1px solid #2b2b2b;
+  color: #ddd;
+}
+
+.position-summary {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  background: #141414;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+}
+
+.summary-item .label {
+  color: #999;
+  margin-right: 8px;
+}
+
+.summary-item .value {
+  color: #ddd;
+  font-weight: 500;
+}
+
+.summary-item .profit {
+  color: #f44336;
+}
+
+.summary-item .loss {
+  color: #4caf50;
+}
+
+.position-panel .ant-table {
+  background: transparent;
+}
+
+.position-panel .ant-table-thead > tr > th {
+  background: #141414;
+  color: #999;
+  border-bottom: 1px solid #2b2b2b;
+}
+
+.position-panel .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #1a1a1a;
+  color: #ddd;
+}
+
+.position-panel .ant-table-tbody > tr:hover > td {
+  background: #1f1f1f;
+}
+
+.position-panel .high-risk-row {
+  background: rgba(244, 67, 54, 0.1);
+}
+
+.position-panel .high-risk-row:hover > td {
+  background: rgba(244, 67, 54, 0.15) !important;
+}
+
+.position-panel .profit {
+  color: #f44336;
+}
+
+.position-panel .loss {
+  color: #4caf50;
+}
+
+.position-panel .ant-btn-primary {
+  background: #1890ff;
+  border-color: #1890ff;
+}
+
+.position-panel .ant-btn-primary:hover {
+  background: #40a9ff;
+  border-color: #40a9ff;
+}
+
+.position-panel .ant-progress-line {
+  margin: 0;
+}
+
+.position-panel .ant-progress-success .ant-progress-bg {
+  background: #4caf50;
+}
+
+.position-panel .ant-progress-exception .ant-progress-bg {
+  background: #f44336;
+}

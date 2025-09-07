@@ -88,7 +88,7 @@ async fn ctp_connect(
 #[tauri::command]
 async fn ctp_login(
     state: State<'_, AppState>,
-    credentials: ctp::models::LoginCredentials,
+    credentials: ctp::LoginCredentials,
 ) -> Result<String, String> {
     let user_id = credentials.user_id.clone();
     
@@ -198,16 +198,14 @@ async fn ctp_disconnect(state: State<'_, AppState>) -> Result<String, String> {
 #[tauri::command]
 async fn ctp_place_order(
     state: State<'_, AppState>,
-    instrument_id: String,
-    direction: String,
-    offset: String,
-    price: f64,
-    volume: u32,
-) -> Result<String, String> {
+    order: ctp::OrderInput,
+) -> Result<ctp::OrderRef, String> {
     let mut client_guard = state.ctp_client.lock().await;
     if let Some(ref mut client) = client_guard.as_mut() {
-        // TODO: 解析方向和开平仓标志并调用下单方法
-        Ok(format!("订单已提交: {} {} @ {} x {}", instrument_id, direction, price, volume))
+        match client.place_order(order).await {
+            Ok(order_ref) => Ok(order_ref),
+            Err(e) => Err(format!("下单失败: {}", e))
+        }
     } else {
         Err("请先连接并登录 CTP".to_string())
     }
@@ -218,11 +216,14 @@ async fn ctp_place_order(
 async fn ctp_cancel_order(
     state: State<'_, AppState>,
     order_ref: String,
+    instrument_id: String,
 ) -> Result<String, String> {
     let mut client_guard = state.ctp_client.lock().await;
     if let Some(ref mut client) = client_guard.as_mut() {
-        // TODO: 调用撤单方法
-        Ok(format!("撤单请求已发送: {}", order_ref))
+        match client.cancel_order(&order_ref).await {
+            Ok(_) => Ok(format!("撤单请求已发送: {}", order_ref)),
+            Err(e) => Err(format!("撤单失败: {}", e))
+        }
     } else {
         Err("请先连接并登录 CTP".to_string())
     }
@@ -232,28 +233,11 @@ async fn ctp_cancel_order(
 #[tauri::command]
 async fn ctp_query_account(
     state: State<'_, AppState>,
-) -> Result<ctp::models::AccountInfo, String> {
+) -> Result<ctp::AccountInfo, String> {
     let mut client_guard = state.ctp_client.lock().await;
     if let Some(ref mut client) = client_guard.as_mut() {
-        // 发送查询请求
         match client.query_account().await {
-            Ok(_) => {
-                // TODO: 实际需要从事件接收器获取响应数据
-                // 暂时返回模拟数据
-                Ok(ctp::models::AccountInfo {
-                    account_id: "test".to_string(),
-                    available: 100000.0,
-                    balance: 100000.0,
-                    margin: 0.0,
-                    frozen_margin: 0.0,
-                    frozen_commission: 0.0,
-                    curr_margin: 0.0,
-                    commission: 0.0,
-                    close_profit: 0.0,
-                    position_profit: 0.0,
-                    risk_ratio: 0.0,
-                })
-            },
+            Ok(account_info) => Ok(account_info),
             Err(e) => Err(format!("查询账户失败: {}", e))
         }
     } else {
@@ -265,17 +249,164 @@ async fn ctp_query_account(
 #[tauri::command]
 async fn ctp_query_positions(
     state: State<'_, AppState>,
-) -> Result<Vec<ctp::models::Position>, String> {
+) -> Result<Vec<ctp::Position>, String> {
     let mut client_guard = state.ctp_client.lock().await;
     if let Some(ref mut client) = client_guard.as_mut() {
-        // 发送查询请求
         match client.query_positions().await {
-            Ok(_) => {
-                // TODO: 实际需要从事件接收器获取响应数据
-                // 暂时返回空列表
-                Ok(Vec::new())
-            },
+            Ok(positions) => Ok(positions),
             Err(e) => Err(format!("查询持仓失败: {}", e))
+        }
+    } else {
+        Err("请先连接并登录 CTP".to_string())
+    }
+}
+
+// 查询订单
+#[tauri::command]
+async fn ctp_query_orders(
+    state: State<'_, AppState>,
+) -> Result<Vec<ctp::OrderStatus>, String> {
+    let mut client_guard = state.ctp_client.lock().await;
+    if let Some(ref mut client) = client_guard.as_mut() {
+        match client.query_orders(None).await {
+            Ok(orders) => Ok(orders),
+            Err(e) => Err(format!("查询订单失败: {}", e))
+        }
+    } else {
+        Err("请先连接并登录 CTP".to_string())
+    }
+}
+
+// 查询成交记录
+#[tauri::command]
+async fn ctp_query_trades(
+    state: State<'_, AppState>,
+) -> Result<Vec<ctp::Trade>, String> {
+    let mut client_guard = state.ctp_client.lock().await;
+    if let Some(ref mut client) = client_guard.as_mut() {
+        match client.query_trades(None).await {
+            Ok(trades) => Ok(trades),
+            Err(e) => Err(format!("查询成交失败: {}", e))
+        }
+    } else {
+        Err("请先连接并登录 CTP".to_string())
+    }
+}
+
+// 查询合约信息
+#[tauri::command]
+async fn ctp_query_instruments(
+    state: State<'_, AppState>,
+) -> Result<Vec<ctp::InstrumentInfo>, String> {
+    let mut client_guard = state.ctp_client.lock().await;
+    if let Some(ref mut client) = client_guard.as_mut() {
+        match client.query_instruments().await {
+            Ok(instruments) => Ok(instruments),
+            Err(e) => Err(format!("查询合约失败: {}", e))
+        }
+    } else {
+        Err("请先连接并登录 CTP".to_string())
+    }
+}
+
+// 查询手续费率
+#[tauri::command]
+async fn ctp_query_commission_rate(
+    state: State<'_, AppState>,
+    instrument_id: String,
+) -> Result<ctp::CommissionRate, String> {
+    let mut client_guard = state.ctp_client.lock().await;
+    if let Some(ref mut client) = client_guard.as_mut() {
+        match client.query_commission_rate(&instrument_id).await {
+            Ok(rate) => Ok(rate),
+            Err(e) => Err(format!("查询手续费率失败: {}", e))
+        }
+    } else {
+        Err("请先连接并登录 CTP".to_string())
+    }
+}
+
+// 查询保证金率
+#[tauri::command]
+async fn ctp_query_margin_rate(
+    state: State<'_, AppState>,
+    instrument_id: String,
+) -> Result<ctp::MarginRate, String> {
+    let mut client_guard = state.ctp_client.lock().await;
+    if let Some(ref mut client) = client_guard.as_mut() {
+        match client.query_margin_rate(&instrument_id).await {
+            Ok(rate) => Ok(rate),
+            Err(e) => Err(format!("查询保证金率失败: {}", e))
+        }
+    } else {
+        Err("请先连接并登录 CTP".to_string())
+    }
+}
+
+// 批量订阅行情
+#[tauri::command]
+async fn ctp_batch_subscribe(
+    state: State<'_, AppState>,
+    subscriptions: Vec<ctp::MarketDataSubscription>,
+) -> Result<String, String> {
+    let count = subscriptions.len();
+    let mut client_guard = state.ctp_client.lock().await;
+    if let Some(ref mut client) = client_guard.as_mut() {
+        for sub in subscriptions {
+            if let Err(e) = client.subscribe_market_data(&sub.instruments).await {
+                return Err(format!("批量订阅部分失败: {}", e));
+            }
+        }
+        Ok(format!("成功订阅 {} 组合约", count))
+    } else {
+        Err("请先连接并登录 CTP".to_string())
+    }
+}
+
+// 获取实时行情
+#[tauri::command]
+async fn ctp_get_market_data(
+    state: State<'_, AppState>,
+    instrument_id: String,
+) -> Result<ctp::MarketData, String> {
+    let mut client_guard = state.ctp_client.lock().await;
+    if let Some(ref mut client) = client_guard.as_mut() {
+        match client.get_market_data(&instrument_id).await {
+            Ok(data) => Ok(data),
+            Err(e) => Err(format!("获取行情失败: {}", e))
+        }
+    } else {
+        Err("请先连接并登录 CTP".to_string())
+    }
+}
+
+// 获取所有订阅的行情
+#[tauri::command]
+async fn ctp_get_all_market_data(
+    state: State<'_, AppState>,
+) -> Result<Vec<ctp::MarketData>, String> {
+    let mut client_guard = state.ctp_client.lock().await;
+    if let Some(ref mut client) = client_guard.as_mut() {
+        match client.get_all_market_data().await {
+            Ok(data) => Ok(data),
+            Err(e) => Err(format!("获取所有行情失败: {}", e))
+        }
+    } else {
+        Err("请先连接并登录 CTP".to_string())
+    }
+}
+
+// 设置风险控制参数
+#[tauri::command]
+async fn ctp_set_risk_params(
+    state: State<'_, AppState>,
+    params: ctp::RiskParams,
+) -> Result<String, String> {
+    let mut client_guard = state.ctp_client.lock().await;
+    if let Some(ref mut client) = client_guard.as_mut() {
+        match client.set_risk_params(params).await {
+            Ok(_) => Ok("风险参数设置成功".to_string()),
+            Err(e) => Err(format!("设置风险参数失败: {}", e))
         }
     } else {
         Err("请先连接并登录 CTP".to_string())
@@ -381,6 +512,15 @@ pub fn run() {
             ctp_cancel_order,
             ctp_query_account,
             ctp_query_positions,
+            ctp_query_orders,
+            ctp_query_trades,
+            ctp_query_instruments,
+            ctp_query_commission_rate,
+            ctp_query_margin_rate,
+            ctp_batch_subscribe,
+            ctp_get_market_data,
+            ctp_get_all_market_data,
+            ctp_set_risk_params,
             query_logs,
             get_log_metrics,
             get_log_system_status

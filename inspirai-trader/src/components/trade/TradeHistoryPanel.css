@@ -1,0 +1,94 @@
+.trade-history-panel {
+  background: #1a1a1a;
+  border-radius: 8px;
+}
+
+.trade-history-panel .ant-card-head {
+  background: #141414;
+  border-bottom: 1px solid #2b2b2b;
+  color: #ddd;
+}
+
+.trade-history-panel .ant-table {
+  background: transparent;
+}
+
+.trade-history-panel .ant-table-thead > tr > th {
+  background: #141414;
+  color: #999;
+  border-bottom: 1px solid #2b2b2b;
+}
+
+.trade-history-panel .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #1a1a1a;
+  color: #ddd;
+}
+
+.trade-history-panel .ant-table-tbody > tr:hover > td {
+  background: #1f1f1f;
+}
+
+.trade-history-panel .profit {
+  color: #f44336;
+}
+
+.trade-history-panel .loss {
+  color: #4caf50;
+}
+
+.trade-history-panel .ant-statistic-title {
+  color: #999;
+}
+
+.trade-history-panel .ant-statistic-content {
+  color: #ddd;
+}
+
+.trade-history-panel .ant-select-selector,
+.trade-history-panel .ant-picker,
+.trade-history-panel .ant-input {
+  background: #2b2b2b !important;
+  border-color: #3b3b3b !important;
+  color: #ddd !important;
+}
+
+.trade-history-panel .ant-picker-input > input {
+  color: #ddd !important;
+}
+
+.trade-history-panel .ant-picker-suffix,
+.trade-history-panel .ant-picker-separator {
+  color: #666;
+}
+
+.trade-history-panel .ant-btn {
+  background: transparent;
+  border-color: #3b3b3b;
+  color: #ddd;
+}
+
+.trade-history-panel .ant-btn:hover {
+  background: #2b2b2b;
+  border-color: #4b4b4b;
+  color: #fff;
+}
+
+.trade-history-panel .ant-btn-primary {
+  background: #1890ff;
+  border-color: #1890ff;
+}
+
+.trade-history-panel .ant-btn-primary:hover {
+  background: #40a9ff;
+  border-color: #40a9ff;
+}
+
+.trade-history-panel .ant-descriptions-item-label {
+  background: #141414;
+  color: #999;
+}
+
+.trade-history-panel .ant-descriptions-item-content {
+  background: #1a1a1a;
+  color: #ddd;
+}

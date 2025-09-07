@@ -2,6 +2,15 @@ use serde::{Deserialize, Serialize};
 // 暂时允许未使用的导入，这些将在后续任务中使用
 #[allow(unused_imports)]
 use chrono::{DateTime, Utc};
+use std::collections::HashMap;
+
+// 重新导出 trading 模块的类型
+pub mod trading;
+pub use trading::{
+    OrderInput, OrderRef, Trade, InstrumentInfo, 
+    CommissionRate, MarginRate, MarketData, 
+    MarketDataSubscription, RiskParams
+};
 
 /// 登录响应
 #[derive(Debug, Clone, Serialize, Deserialize)]

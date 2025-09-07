@@ -1,0 +1,52 @@
+.chart-panel {
+  background: #1a1a1a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.chart-panel .ant-card-head {
+  background: #141414;
+  border-bottom: 1px solid #2b2b2b;
+  padding: 8px 16px;
+}
+
+.chart-panel .ant-card-head-title {
+  color: #ddd;
+  font-size: 14px;
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  cursor: crosshair;
+}
+
+.chart-panel .ant-select-selector {
+  background: #2b2b2b !important;
+  border-color: #3b3b3b !important;
+  color: #ddd !important;
+}
+
+.chart-panel .ant-select-arrow {
+  color: #666;
+}
+
+.chart-panel .ant-btn {
+  background: transparent;
+  border-color: #3b3b3b;
+  color: #ddd;
+}
+
+.chart-panel .ant-btn:hover {
+  background: #2b2b2b;
+  border-color: #4b4b4b;
+  color: #fff;
+}
+
+.chart-panel .ant-switch {
+  background: #2b2b2b;
+}
+
+.chart-panel .ant-switch-checked {
+  background: #1890ff;
+}

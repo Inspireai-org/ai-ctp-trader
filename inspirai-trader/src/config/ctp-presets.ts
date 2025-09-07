@@ -28,6 +28,16 @@ export interface CtpPreset {
   defaultInvestorId?: string;
   /** 默认密码（仅开发环境使用） */
   defaultPassword?: string;
+  /** 环境分类 */
+  category?: 'production' | 'simulation' | 'tts' | 'development';
+  /** 环境特性 */
+  features?: string[];
+  /** 连接超时时间 */
+  connectionTimeout?: number;
+  /** 是否支持周末使用 */
+  isWeekendAvailable?: boolean;
+  /** 优先级 */
+  priority?: number;
 }
 
 /**
@@ -95,7 +105,46 @@ export const CTP_PRESETS: Record<string, CtpPreset> = {
     app_id: '',
     auth_code: '',
     requireCredentials: true,
-    tips: '⚠️ 生产环境请谨慎操作！请向期货公司获取正确的服务器地址和认证信息'
+    tips: '⚠️ 生产环境请谨慎操作！请向期货公司获取正确的服务器地址和认证信息',
+    category: 'production'
+  },
+  tts_openctp: {
+    key: 'tts_openctp',
+    label: 'TTS - OpenCTP 测试',
+    description: 'OpenCTP 提供的 TTS 测试环境，支持 7x24 小时交易测试',
+    md_front_addr: 'tcp://121.37.80.177:20004',
+    trader_front_addr: 'tcp://121.37.80.177:20002',
+    broker_id: '9999',
+    app_id: 'simnow_client_test',
+    auth_code: '0000000000000000',
+    requireCredentials: true,
+    tips: '🔧 TTS 测试环境 - 适合周末和非交易时间开发测试，支持完整的交易功能',
+    defaultInvestorId: 'test001',
+    defaultPassword: 'test123',
+    category: 'tts',
+    features: ['7x24小时', '模拟交易', '开发测试', '周末可用'],
+    connectionTimeout: 10000,
+    isWeekendAvailable: true,
+    priority: 1
+  },
+  tts_local: {
+    key: 'tts_local',
+    label: 'TTS - 本地测试',
+    description: '本地 TTS 测试环境，用于离线开发和调试',
+    md_front_addr: 'tcp://127.0.0.1:20004',
+    trader_front_addr: 'tcp://127.0.0.1:20002',
+    broker_id: '9999',
+    app_id: 'local_test',
+    auth_code: '0000000000000000',
+    requireCredentials: false,
+    tips: '💻 本地测试环境 - 需要先启动本地 TTS 服务',
+    defaultInvestorId: 'local',
+    defaultPassword: 'local',
+    category: 'tts',
+    features: ['本地部署', '离线测试', '快速调试'],
+    connectionTimeout: 5000,
+    isWeekendAvailable: true,
+    priority: 2
   }
 };
 
@@ -123,4 +172,55 @@ export function getDefaultPreset(): CtpPreset {
     throw new Error('默认预设配置不存在');
   }
   return preset;
+}
+
+/**
+ * 检查是否为周末
+ */
+export function isWeekend(): boolean {
+  const now = new Date();
+  const day = now.getDay();
+  return day === 0 || day === 6; // 周日或周六
+}
+
+/**
+ * 获取推荐的预设配置
+ * 周末推荐 TTS 环境，工作日推荐常规环境
+ */
+export function getRecommendedPreset(): CtpPreset {
+  if (isWeekend()) {
+    // 周末推荐 TTS 环境
+    const ttsPresets = Object.values(CTP_PRESETS).filter(
+      preset => preset.category === 'tts' && preset.isWeekendAvailable
+    );
+    if (ttsPresets.length > 0) {
+      // 按优先级排序，返回优先级最高的
+      ttsPresets.sort((a, b) => (a.priority || 0) - (b.priority || 0));
+      return ttsPresets[0];
+    }
+  }
+  
+  // 工作日或没有 TTS 环境时，返回默认环境
+  return getDefaultPreset();
+}
+
+/**
+ * 获取周末可用的预设配置
+ */
+export function getWeekendPresets(): CtpPreset[] {
+  return Object.values(CTP_PRESETS).filter(preset => preset.isWeekendAvailable);
+}
+
+/**
+ * 按分类获取预设配置
+ */
+export function getPresetsByCategory(category: string): CtpPreset[] {
+  return Object.values(CTP_PRESETS).filter(preset => preset.category === category);
+}
+
+/**
+ * 获取 TTS 预设配置
+ */
+export function getTtsPresets(): CtpPreset[] {
+  return getPresetsByCategory('tts');
 }

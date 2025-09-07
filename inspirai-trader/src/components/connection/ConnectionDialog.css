@@ -1,0 +1,68 @@
+.connection-dialog .ant-modal-content {
+  background: #1a1a1a;
+  border-radius: 8px;
+}
+
+.connection-dialog .ant-modal-header {
+  background: #141414;
+  border-bottom: 1px solid #2b2b2b;
+}
+
+.connection-dialog .ant-modal-title {
+  color: #ddd;
+}
+
+.connection-dialog .ant-tabs-nav {
+  background: transparent;
+}
+
+.connection-dialog .ant-tabs-tab {
+  color: #999;
+}
+
+.connection-dialog .ant-tabs-tab-active {
+  color: #1890ff;
+}
+
+.connection-dialog .ant-form-item-label > label {
+  color: #999;
+}
+
+.connection-dialog .ant-input,
+.connection-dialog .ant-select-selector {
+  background: #2b2b2b !important;
+  border-color: #3b3b3b !important;
+  color: #ddd !important;
+}
+
+.connection-dialog .ant-input-affix-wrapper {
+  background: #2b2b2b !important;
+  border-color: #3b3b3b !important;
+}
+
+.connection-dialog .ant-input-affix-wrapper input {
+  background: transparent;
+  color: #ddd;
+}
+
+.connection-dialog .ant-btn {
+  background: transparent;
+  border-color: #3b3b3b;
+  color: #ddd;
+}
+
+.connection-dialog .ant-btn:hover {
+  background: #2b2b2b;
+  border-color: #4b4b4b;
+  color: #fff;
+}
+
+.connection-dialog .ant-btn-primary {
+  background: #1890ff;
+  border-color: #1890ff;
+}
+
+.connection-dialog .ant-btn-primary:hover {
+  background: #40a9ff;
+  border-color: #40a9ff;
+}
